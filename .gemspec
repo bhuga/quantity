@@ -8,8 +8,8 @@ GEMSPEC = Gem::Specification.new do |gem|
   gem.name               = 'quantity'
   gem.homepage           = 'http://quantity.rubyforge.org/'
   gem.license            = 'Public Domain' if gem.respond_to?(:license=)
-  gem.summary            = '...'
-  gem.description        = '...'
+  gem.summary            = 'Units and quantities for Ruby.'
+  gem.description        = gem.summary
   gem.rubyforge_project  = 'quantity'
 
   gem.authors            = ['Ben Lavender', 'Arto Bendiken']
