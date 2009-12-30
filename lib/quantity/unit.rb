@@ -8,21 +8,66 @@ class Quantity
     autoload :Luminosity,  'quantity/unit/luminosity'
     autoload :Substance,   'quantity/unit/substance'
 
-    # @return [String]
-    attr_reader :name
-
-    alias_method :to_s, :name
+    @@units_hash = {}
 
     ##
-    # @param  [String] name
-    def initialize(name = nil)
-      @name = name || self.class.name.split(':').last.downcase
+    # @param [Symbol] name
+    def self.is_unit?(symbol)
+      @@units_hash.has_key?(symbol)
     end
+    
+    def self.inherited(child)
+      puts "extending #{child}"
+      child.class_eval do
+        puts "adding unit base, self = #{self.is_a?(Unit)} "
+        @@units = []
+        @@reference = nil
+        def measures
+           self.class.name.split(':').last.downcase.to_sym
+        end
+        def self.reference(name, *aliases)
+          unit = self.new(name, 1)
+          @reference = unit
+          @@units_hash[name] = unit
+          aliases.each { | name | @@units_hash[name] = unit }
+        end
+        def self.add_unit(name, value, *aliases)
+          unit = self.new(name, value)
+          @@units_hash[name] = unit
+          aliases.each { | name | @@units_hash[name] = unit }
+        end
+        ##
+        # @param  [String] name
+        def initialize(name, value)
+          @name = name
+          @value = value
+        end
+      end
+    end
+
+    ##
+    # @param: [Symbol] name or alias of unit
+    def self.for(symbol)
+      @@units_hash[symbol]
+    end
+
+    #private_class_method :new
+
+    attr_reader :name, :value
+    # @return [String]
+    alias_method :to_s, :name
 
     ##
     # @return [Symbol]
     def to_sym
       name.to_sym
+    end
+
+    ##
+    # @param [Numeric] return a string representing this numeric as this unit
+    # @return [String]
+    def s_for(s)
+      "#{s} #{@name}"
     end
   end
 end

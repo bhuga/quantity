@@ -1,6 +1,8 @@
 $:.unshift(File.expand_path(File.join(File.dirname(__FILE__), 'lib')))
 
 require 'quantity'
+require 'quantity/unit'
+require 'quantity/unit/length'
 
 describe Quantity do
 
@@ -13,11 +15,11 @@ describe Quantity do
   end
 
   it "should know what it measures" do
-    2.meters.measures.should == :distance
+    2.meters.unit.measures.should == :length
   end
 
   it "should know its units" do
-    2.meters.unit.should == :feet
+    2.meters.unit.name.should == :meter
   end
 
   it "should convert from one type to another" do
