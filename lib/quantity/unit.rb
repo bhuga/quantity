@@ -16,6 +16,12 @@ class Quantity
       @@units_hash.has_key?(symbol)
     end
     
+    ##
+    # @param: [Symbol] name or alias of unit
+    def self.for(symbol)
+      @@units_hash[symbol]
+    end
+
     def self.inherited(child)
       child.class_eval do
         @@units = []
@@ -43,13 +49,7 @@ class Quantity
       end
     end
 
-    ##
-    # @param: [Symbol] name or alias of unit
-    def self.for(symbol)
-      @@units_hash[symbol]
-    end
-
-    #private_class_method :new
+    # instance methods
 
     attr_reader :name, :value
     # @return [String]
