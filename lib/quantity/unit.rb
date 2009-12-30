@@ -17,9 +17,7 @@ class Quantity
     end
     
     def self.inherited(child)
-      puts "extending #{child}"
       child.class_eval do
-        puts "adding unit base, self = #{self.is_a?(Unit)} "
         @@units = []
         @@reference = nil
         def measures
