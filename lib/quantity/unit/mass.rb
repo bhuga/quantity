@@ -3,9 +3,7 @@ class Quantity
     ##
     # @see http://en.wikipedia.org/wiki/Mass
     class Mass < Unit
-      reference :picogram, :picograms
-      add_unit :milligram, 1024, :milligrams
-      # TODO
+      reference :milligram, :mg, :milligrams
     end
   end
 end

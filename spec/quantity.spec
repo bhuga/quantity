@@ -1,6 +1,7 @@
 $:.unshift(File.expand_path(File.join(File.dirname(__FILE__), 'lib')))
 
 require 'quantity'
+require 'quantity/imperial'
 require 'quantity/unit'
 require 'quantity/unit/length'
 require 'quantity/unit/mass'
@@ -9,7 +10,7 @@ describe Quantity do
 
   it "should be instantiated from numbers" do
     1.meter.should == 1
-    2.5.meters.should == 2.5
+    2.5.feet.should == 2.5
   end
 
   it "should work with alias names" do
