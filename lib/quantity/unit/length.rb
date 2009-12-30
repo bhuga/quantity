@@ -3,7 +3,6 @@ class Quantity
     ##
     # @see http://en.wikipedia.org/wiki/Length
     class Length < Unit
-      puts "length: self #{self.class} unit? #{self.is_a?(Unit)}"
       reference :millimeter, :millimeters, :m
       add_unit :centimeter, 10, :cm, :centimeters
       add_unit :meter, 1000, :m, :meters
