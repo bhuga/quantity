@@ -1,11 +1,20 @@
 $:.unshift(File.expand_path(File.join(File.dirname(__FILE__), 'lib')))
 
 require 'quantity'
-require 'quantity/imperial'
-require 'quantity/unit'
-require 'quantity/unit/length'
-require 'quantity/unit/mass'
 require 'quantity/si'
+require 'quantity/imperial'
+
+describe Quantity::Unit do
+  it "should be easily updateable" do
+    Quantity::Unit::Length.add_unit :furlong, 201168, :furlongs
+    12.furlongs.should == 12
+  end
+
+  it "should be able to add aliases" do
+    Quantity::Unit::Length.add_alias :furlong, :fuzzy, :fuzzywuzzy
+    12.fuzzy.should == 12.fuzzywuzzy
+  end
+end
 
 describe Quantity do
 
@@ -20,10 +29,12 @@ describe Quantity do
 
   it "should know what it measures" do
     2.meters.unit.measures.should == :length
+    2.meters.measures.should == :length
   end
 
   it "should know its units" do
     2.meters.unit.name.should == :meter
+    2.meters.units.should == :meter
   end
 
   it "should convert from one type to another" do

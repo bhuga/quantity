@@ -5,7 +5,7 @@
 #
 # Volume (liters) is also part of this, since it follows the same pattern.
 #
-# The 'reference' unit is millimeters.  Units larger than millimeters
+# The 'reference' unit is milli-.  Units larger than milli-
 # constructed via Fixnums/Bignums, such as 2.meters, will be stored with 
 # Fixnum / Bignum accuracy.  Smaller items, such as 35.femtometers, will 
 # be stored with (rationals / floats ?). FIXME

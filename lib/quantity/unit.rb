@@ -109,7 +109,7 @@ class Quantity
         # @param [Symbol] original
         # @param [Array] *aliases 
         def self.add_alias(original, *aliases)
-          aliases.each { | name | @@units_hash[name] = self.for(original) }
+          aliases.each { | name | @@units_hash[name] = Unit.for(original) }
         end
 
         ##
