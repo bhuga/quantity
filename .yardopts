@@ -9,5 +9,5 @@
 AUTHORS
 UNLICENSE
 VERSION
- 
+lib/quantity.rb lib/**/*.rb 
 

@@ -4,35 +4,34 @@ require 'quantity/version'
 # A quantity of something.  Quantities are immutable; conversions and other operations return
 # a new quantity.
 #
-# @example General Use
-#   require 'quantity/si'
+# ## General Use
+#     require 'quantity/si'
 #
-#   12.meters                   #=> Quantity
-#   12.meters.measures          #=> :length
-#   12.meters.units             #=> :meters
-#   12.meters.unit              #=> Quantity::Unit::Length
-#   12.meters.in_centimeters == 1200.centimeters #=> true
-#   12.meters == 12             #=> true
-#   12 == 12.meters             #=> false (careful!)
-#   12.meters == 12.centimeters #=> false
-#   12.meters + 5.centimeters == 12.05.meters #=> true
-#   12.meters.in_picograms      #=> raises ArgumentError
+#     12.meters                                     #=> Quantity
+#     12.meters.measures                            #=> :length
+#     12.meters.units                               #=> :meters
+#     12.meters.unit                                #=> Quantity::Unit::Length
+#     12.meters.in_centimeters == 1200.centimeters  #=> true
+#     12.meters == 12                               #=> true
+#     12.meters == 12.centimeters                   #=> false
+#     12.meters + 5.centimeters == 12.05.meters     #=> true
+#     12.meters.in_picograms                        #=> raises ArgumentError
 #
-# @example Derived Units
-#   require 'quantity/si'
-#   speed_of_light = 299_752_458.meters / 1.second   #=>Quantity::Unit::Derived
-#   speed_of_light.measures     #=> "meters per second"
-#   speed_of_light.units        #=> "meters per second"
+# ## Derived Units
+#     require 'quantity/si'
+#     speed_of_light = 299_752_458.meters / 1.second    #=>Quantity::Unit::Derived
+#     speed_of_light.measures                           #=> "meters per second"
+#     speed_of_light.units                              #=> "meters per second"
 #   
-#   ludicrous_speed = speed_of_light * 1000
-#   ludicrous_speed.measures    #=> "meters per second"  #TODO: velocity, accleration ?
-#   ludicrous_speed.to_s        #=> "299752458000 meters per second"
+#     ludicrous_speed = speed_of_light * 1000
+#     ludicrous_speed.measures                #=> "meters per second"  #TODO: velocity, accleration ?
+#     ludicrous_speed.to_s                    #=> "299752458000 meters per second"
 #
-#   four_square_meters = 2.meters * 2.meters  
-#   four_square_meters.measures       #=> "meters squared" #TODO: area ?
-#   four_square_meteres.units         #=> "meters squared"
-#   # the magic only goes so far
-#   four_square_meteres * 2.meters.measures #=> "meters squared * meters"  # the magic only goes so far
+#     four_square_meters = 2.meters * 2.meters  
+#     four_square_meters.measures             #=> "meters squared" #TODO: area ?
+#     four_square_meteres.units               #=> "meters squared"
+#     # the magic only goes so far
+#     four_square_meteres * 2.meters.measures #=> "meters squared * meters"
 #
 # If the default to_s isn't what you want, you can buld it with 12.meters.value and 12.meters.units
 #
@@ -171,7 +170,7 @@ class Quantity
     end  
   end
 
-  ##
+  #
   # :method to_unit
   # Convert this quantity to another quantity.
   # unit can be any unit that measures the same thing as this quantity, i.e. 
@@ -180,19 +179,20 @@ class Quantity
   # @raises ArgumentError
   # @return [Quantity]
 
-  # @private
-  # this creates the conversion methods of .to_* and .in_*
-  def method_missing(method, *args, &block)
-    if method.to_s =~ /(to_|in_)(.*)/
-      if (Unit.is_unit?($2.to_sym))
-        convert($2.to_sym)
-      else
-        raise ArgumentError, "Unknown target unit type: #{$2}"
+    # this creates the conversion methods of .to_* and .in_*
+    # @private
+    def method_missing(method, *args, &block)
+      if method.to_s =~ /(to_|in_)(.*)/
+        if (Unit.is_unit?($2.to_sym))
+          convert($2.to_sym)
+        else
+          raise ArgumentError, "Unknown target unit type: #{$2}"
+        end
+      else 
+        raise NoMethodError, "Undefined method `#{method}` for #{self}:#{self.class}"
       end
-    else 
-      raise NoMethodError, "Undefined method `#{method}` for #{self}:#{self.class}"
     end
-  end
+
 end
 
 # @private

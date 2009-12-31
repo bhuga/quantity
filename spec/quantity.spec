@@ -5,6 +5,7 @@ require 'quantity/imperial'
 require 'quantity/unit'
 require 'quantity/unit/length'
 require 'quantity/unit/mass'
+require 'quantity/si'
 
 describe Quantity do
 
@@ -63,12 +64,14 @@ describe Quantity do
 
   it "should multiply any items" do
     (2.meters * 2.meters).should == 4
-    (2.meters * 2.meters).unit.name == "meter^2"
-    (2.meters * 2.meters).unit.measures == "meter^2"
+    (2.meters * 2.meters).unit.name == "meter squared"
+    (2.meters * 2.meters).unit.measures == "meter squared"
   end
 
   it "should divide any items" do
     (2.meters / 2.picograms).should == 5
+    (2.meters / 2.picograms).measures.should == "meters per picogram"
+    (2.meters / 2.picograms).units.should == "meters per picogram"
   end
 
 end
