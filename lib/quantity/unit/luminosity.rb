@@ -3,7 +3,7 @@ class Quantity
     ##
     # @see http://en.wikipedia.org/wiki/Luminous_intensity
     class Luminosity < Unit
-      # TODO
+      reference :millicandela, :millicandelas, :millcd, :millicds
     end
   end
 end

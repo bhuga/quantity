@@ -3,7 +3,7 @@ class Quantity
     ##
     # @see http://en.wikipedia.org/wiki/Time
     class Time < Unit
-      # TODO
+      reference :millisecond, :ms, :milliseconds
     end
   end
 end

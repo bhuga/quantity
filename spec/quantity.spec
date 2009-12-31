@@ -1,8 +1,8 @@
 $:.unshift(File.expand_path(File.join(File.dirname(__FILE__), 'lib')))
 
 require 'quantity'
-require 'quantity/si'
-require 'quantity/imperial'
+require 'quantity/systems/si'
+require 'quantity/systems/us'
 
 describe Quantity::Unit do
   it "should be easily updateable" do

@@ -3,7 +3,7 @@ class Quantity
     ##
     # @see http://en.wikipedia.org/wiki/Thermodynamic_temperature
     class Temperature < Unit
-      # TODO
+      reference :millikelvin, :millikelvins
     end
   end
 end

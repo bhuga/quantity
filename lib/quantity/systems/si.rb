@@ -1,14 +1,21 @@
 # SI units for Length, Mass, Luminosity, Current, Substance,
 # Temperature, and Time.  Units from yocto- to yotta- are supplied.
 # 
-# Ångstroms are also supplied for Length.
+# Also supplied:
+#  * Ångstroms are supplied for Length. (use angstrom or angstroms)
+#  * Tonnes (Metric) are supplied for mass.
+#  * cc's for volume
 #
-# Volume (liters) is also part of this, since it follows the same pattern.
+# Volume (liters) is also part of this, since it follows the same pattern, 
+# even though the SI considers it a derived unit.
 #
 # The 'reference' unit is milli-.  Units larger than milli-
 # constructed via Fixnums/Bignums, such as 2.meters, will be stored with 
 # Fixnum / Bignum accuracy.  Smaller items, such as 35.femtometers, will 
-# be stored with (rationals / floats ?). FIXME
+# be stored with rationals or floats.  Generally speaking, you shouldn't
+# have to worry about this--use the numbers, and it will Do The Right Thing.
+# Do remember that you may need to do a .to_f before dividing if that's
+# what you want.
 #
 # @see http://physics.nist.gov/cuu/Units/units.html
 # @see http://physics.nist.gov/cuu/Units/current.html
@@ -60,7 +67,9 @@ module SI
       prefixes.each do | prefix, value |
         add_unit "#{prefix + unit}".to_sym, value, "#{prefix + unit}s".to_sym
         if aliases[unit]
-          add_alias "#{prefix + unit}".to_sym, *(aliases[unit])
+          aliases[unit].each do | unit_alias |
+            add_alias "#{prefix + unit}".to_sym, "#{prefix + unit_alias}".to_sym
+          end
         end
       end
     end
@@ -77,10 +86,12 @@ module SI
     add_alias :kilogram, :kg
     add_alias :gram, :g
     add_alias :milligram, :mg
+    add_alias :megagram, :tonne, :tonnes
   end
 
   class Quantity::Unit::Volume
     add_alias :liter, :l
+    add_alias :milliliter, :cc, :ccs
   end
 
 end

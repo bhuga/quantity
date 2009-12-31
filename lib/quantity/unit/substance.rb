@@ -3,7 +3,7 @@ class Quantity
     ##
     # @see http://en.wikipedia.org/wiki/Amount_of_substance
     class Substance < Unit
-      # TODO
+      reference :millimole, :millimoles, :millimol, :millimols
     end
   end
 end

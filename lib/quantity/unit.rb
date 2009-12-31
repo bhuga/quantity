@@ -92,9 +92,11 @@ class Quantity
         # @param [Array] *aliases
         def self.reference(name, *aliases)
           unit = self.new(name, 1)
+          unless @reference.nil?
+            warn "WARNING: Quantity::Unit#reference: overwriting reference unit with #{name}"
+          end
           @reference = unit
-          @@units_hash[name] = unit
-          add_alias name, *aliases
+          add_alias(unit, name, *aliases)
         end
 
         # @param [Symbol] name
@@ -102,16 +104,29 @@ class Quantity
         # @param [Array] *aliases
         def self.add_unit(name, value, *aliases)
           unit = self.new(name, value)
-          @@units_hash[name] = unit
-          add_alias name, *aliases
+          add_alias(unit, name, *aliases)
         end
 
+        # Register a unit with the given names
         # @param [Symbol] original
         # @param [Array] *aliases 
-        def self.add_alias(original, *aliases)
-          aliases.each { | name | @@units_hash[name] = Unit.for(original) }
+        def self.register_unit(unit, *names)
+          unit = Unit.for(unit)
+          names.each do | name | 
+            unless (Unit.for(name).nil? || Unit.for(name) == unit)
+              message = "WARNING: Quantity::Unit#register_unit: Overwriting unit alias #{name}"
+              message += " (currently (#{Unit.for(name).name}) with #{Unit.for(name).name}"
+              warn message
+            end
+            @@units_hash[name] = unit
+          end
         end
 
+        # Sugar to register_unit for the DSL
+        class <<self
+          alias_method :add_alias, :register_unit
+        end
+        
         ##
         # @param  [String] name
         def initialize(name, value)
