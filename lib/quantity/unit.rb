@@ -17,9 +17,9 @@ class Quantity
     end
     
     ##
-    # @param: [Symbol] name or alias of unit
-    def self.for(symbol)
-      @@units_hash[symbol]
+    # @param: [Unit Symbol] Unit, name or alias of unit
+    def self.for(unit)
+      unit.is_a?(Unit) ? unit : @@units_hash[unit]
     end
 
     def self.inherited(child)

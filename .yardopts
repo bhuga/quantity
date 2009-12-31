@@ -1,0 +1,13 @@
+--title "Quantity: Quantities and units of measurements for Ruby"
+--output-dir doc/yard
+--protected
+--no-private
+--hide-void-return
+--markup markdown
+--readme README.md
+-
+AUTHORS
+UNLICENSE
+VERSION
+ 
+
