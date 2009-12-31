@@ -85,4 +85,10 @@ describe Quantity do
     (2.meters / 2.picograms).units.should == "meters per picogram"
   end
 
+  it "should be comparable" do
+    2.meters.should be < 3.meters
+    150.centimeters.should be > 1.meter
+    [1.meter, 1.foot, 1.inch].sort.should == [1.inch, 1.foot, 1.meter]
+  end
+
 end

@@ -37,6 +37,7 @@ require 'quantity/version'
 #
 # @see Quantity::Unit
 class Quantity
+  include Comparable
   autoload :Unit, 'quantity/unit'
 
   #undef_method *(instance_methods - %w(__id__ __send__ __class__ __eval__ instance_eval inspect should))
@@ -98,19 +99,6 @@ class Quantity
     @unit.name
   end
 
-  # Equality.  Quantities compare with numerics based on their value.
-  # @param [Quantity Numeric] other
-  # @return [Boolean]
-  def ==(other)
-    if (other.is_a?(Numeric))
-      @value == other
-    elsif (other.is_a?(Quantity))
-      @unit.measures == other.unit.measures ? @reference_value == other.reference_value : false    
-    else
-      false
-    end
-  end
-
   # Addition.  Add two quantities of the same type.  Do not need to have the same units.
   # @param [Quantity Numeric] other
   # @return [Quantity]
@@ -139,13 +127,30 @@ class Quantity
       if (@unit.measures == other.unit.measures)
         Quantity.new({:unit => @unit,:reference_value => @reference_value - other.reference_value})
       else
-        raise ArgumentError,"Cannot subtract #{@unit.measures} from #{other.unit.measures}"
+        raise ArgumentError,"Cannot subtract #{@unit.measures} from #{other.measures}"
       end
     else
       raise ArgumentError, "Cannot subtract #{other} from #{self}"
     end
   end
 
+  # Comparison.  Compare this to another quantity or numeric.  Compared to a numeric,
+  # this will assume a numeric of the same unit as self.
+  # @param [Quantity Numeric] other
+  # @return [-1 0 1]
+  def <=>(other)
+    if (other.is_a?(Numeric))
+      other <=> @value
+    elsif(other.is_a?(Quantity))
+      if (@unit.measures == other.unit.measures)
+        @reference_value <=> other.reference_value
+      else
+        raise ArgumentError, "Cannot compare #{@unit.measures} to #{other.measures}"
+      end
+    else
+      raise ArgumentError, "Cannot compare #{other} to #{self}"
+    end
+  end
   # Integer representation
   # @return [Fixnum]
   def to_i
