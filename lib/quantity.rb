@@ -72,7 +72,12 @@ class Quantity
       when Hash
         @unit = Unit.for(value[:unit])
         @reference_value = value[:reference_value] || (value[:value] * @unit.value)
-        @value = @reference_value / @unit.value.to_f
+        @value = @unit.reference_unit.convert_proc(@unit).call(@reference_value)
+        #if defined? Rational
+        #  @value = Rational(@reference_value,@unit.value)
+        #else
+        #  @value = @reference_value / @unit.value.to_f
+        #end
       when Numeric
         @unit = Unit.for(unit)
         @value = value
@@ -151,6 +156,31 @@ class Quantity
       raise ArgumentError, "Cannot compare #{other} to #{self}"
     end
   end
+
+  # Multiplication.
+  # @param [Numeric, Quantity]
+  # @return [Quantity]
+  def *(other)
+    if (other.is_a?(Numeric))
+      Quantity.new(@value * other, @unit)
+    elsif(other.is_a?(Quantity))
+      new_measures = multiply_text(self.measures,other.measures)
+      new_unit = multiply_text(self.units,other.units)
+    else
+      raise ArgumentError, "Cannot multiply #{other} with #{self}"
+    end
+  end
+
+  # 'multiply' text from two quantities to come up with a new description
+  # @private
+  def self.multiply_text(first, second)
+    if (first == second)
+      "#{first} squared"
+    else
+      "#{first} * #{second}"
+    end
+  end
+
   # Integer representation
   # @return [Fixnum]
   def to_i

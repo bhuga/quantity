@@ -81,7 +81,15 @@ class Quantity
         @@units = []
 
         # Reference for this measured type
-        @@reference = nil
+        @reference_unit = nil
+       
+        class << self; attr_accessor :reference_unit ; end
+
+        # Sugar for self.class.reference_unit
+        # @return [Unit]
+        def reference_unit
+          self.class.reference_unit
+        end
 
         # @return [Symbol]
         def measures
@@ -92,10 +100,10 @@ class Quantity
         # @param [Array] *aliases
         def self.reference(name, *aliases)
           unit = self.new(name, 1)
-          unless @reference.nil?
+          unless @reference_unit.nil?
             warn "WARNING: Quantity::Unit#reference: overwriting reference unit with #{name}"
           end
-          @reference = unit
+          @reference_unit = unit
           add_alias(unit, name, *aliases)
         end
 
@@ -126,7 +134,26 @@ class Quantity
         class <<self
           alias_method :add_alias, :register_unit
         end
-        
+       
+        # Provide a lambda to do a conversion from one unit to another
+        # @param to [Unit, Symbol]
+        # @return [Proc]
+        def convert_proc(to)
+          to_unit = Unit.for(to)
+          unless (to_unit.measures == self.measures)
+            raise ArgumentError, "Cannot convert #{self.measures} to #{to_unit.measures}"
+          end
+          if defined? Rational
+            lambda do | from |
+              Rational(from, to_unit.value) * @value
+            end
+          else
+            lambda do | from |
+              (from / to_unit.value.to_f) * @value
+            end
+          end
+        end
+
         ##
         # @param  [String] name
         def initialize(name, value)
