@@ -4,18 +4,6 @@ require 'quantity'
 require 'quantity/systems/si'
 require 'quantity/systems/us'
 
-describe Quantity::Unit do
-  it "should be easily updateable" do
-    Quantity::Unit::Length.add_unit :furlong, 201168, :furlongs
-    12.furlongs.should == 12
-  end
-
-  it "should be able to add aliases" do
-    Quantity::Unit::Length.add_alias :furlong, :fuzzy, :fuzzywuzzy
-    12.fuzzy.should == 12.fuzzywuzzy
-  end
-end
-
 describe Quantity do
 
   it "should be instantiated from numbers" do
@@ -76,13 +64,20 @@ describe Quantity do
   it "should multiply any items" do
     (2.meters * 2.meters).should == 4
     (2.meters * 2.meters).unit.name == "meter squared"
-    (2.meters * 2.meters).unit.measures == "meter squared"
+    (2.meters * 2.meters).unit.measures == "length squared"
   end
 
   it "should divide any items" do
     (2.meters / 2.picograms).should == 5
-    (2.meters / 2.picograms).measures.should == "meters per picogram"
+    (2.meters / 2.picograms).measures.should == "length per mass"
     (2.meters / 2.picograms).units.should == "meters per picogram"
+  end
+
+  it "should figure out derived units" do
+    1.centimeter * 1.centimeter * 1.centimer.should == 1.cc
+    (1.centimeter * 1.centimeter * 1.centimer).measures.should == :volume
+    (1.centimeter * 1.centimeter).measures.should == :area
+    (30.meters / 1.second).measures.should == :speed
   end
 
   it "should be comparable" do
