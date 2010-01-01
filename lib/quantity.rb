@@ -73,11 +73,6 @@ class Quantity
         @unit = Unit.for(value[:unit])
         @reference_value = value[:reference_value] || (value[:value] * @unit.value)
         @value = @unit.reference_unit.convert_proc(@unit).call(@reference_value)
-        #if defined? Rational
-        #  @value = Rational(@reference_value,@unit.value)
-        #else
-        #  @value = @reference_value / @unit.value.to_f
-        #end
       when Numeric
         @unit = Unit.for(unit)
         @value = value
