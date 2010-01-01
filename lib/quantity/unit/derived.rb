@@ -27,7 +27,9 @@ class Quantity
         (@den_unit,@den_power) = parse_unit.call(denominator) if denominator
         reference_unit_name = "#{@num_unit.reference_unit.name}^#{@num_power}"
         @reference_unit = reference_unit_name == new_name ? self : Unit.for(reference_unit_name)
-        @value = (@num_unit.value)**@num_power
+        # the multiplier for a derived class does not have the power applied to it, because
+        # it's in reference to a squared unit which will do that.
+        @value = (@num_unit.value)
         # TODO: check for a hard class that matches this signature
         puts "made a new derived class #{measures}, val #{@value} numu #{@num_unit.name} p #{@num_power}"
       end
@@ -76,11 +78,11 @@ class Quantity
         if (defined? Rational) && defined?(conversion_value.gcd)
           lambda do | from |
             puts "multi: from: #{from} cv: #{conversion_value} tuv: #{to_unit.value} (total #{Rational(conversion_value,to_unit.value)**@num_power} val: #{value}"
-            from * Rational(conversion_value,to_unit.value)**@num_power / value
+            from * Rational(conversion_value,to_unit.value)**@num_power
            end
         else
           lambda do | from |
-            from * (conversion_value / to_unit.value.to_f)**@num_power / value
+            from * (conversion_value / to_unit.value.to_f)**@num_power
           end
         end
       end

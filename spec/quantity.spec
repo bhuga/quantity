@@ -3,10 +3,6 @@ $:.unshift(File.expand_path(File.join(File.dirname(__FILE__), 'lib')))
 require 'quantity'
 require 'quantity/systems/si'
 require 'quantity/systems/us'
-x = Quantity::Unit.for("m^2")
-y = x.convert_proc(:feet)
-y.call(2)
-
 
 describe Quantity do
 

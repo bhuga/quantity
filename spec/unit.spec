@@ -27,6 +27,8 @@ describe Quantity::Unit do
   it "should return a conversion proc for derived units" do
     Quantity::Unit.for('m^2').convert_proc(:feet).call(4).to_f.should be_close 43.0556417, 10**-5
     Quantity::Unit.for('nanometers^2').convert_proc(:feet).call(10**20).to_f.should be_close 1076.39104, 10**-5
+    Quantity::Unit.for('mm^2').convert_proc(:meter).call(4000000).to_i.should == 4
+    Quantity::Unit.for('mm^2').convert_proc('m^2').call(4000000).to_i.should == 4
   end
 end
 
