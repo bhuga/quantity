@@ -1,4 +1,5 @@
-module Imperial
+# Units of measurement that are generally difficult to classify
+module Other
   class Quantity::Unit::Length
     add_unit :foot, 304.8, :ft, :feet
     add_unit :inch, 25.4, :in, :inches
