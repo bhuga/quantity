@@ -186,8 +186,7 @@ class Quantity
     if (other.is_a?(Numeric))
       Quantity.new(@value * other, @unit)
     elsif(other.is_a?(Quantity) && self.units == other.units)
-      new_unit = multiply_text(self.units,other.units)
-      Quantity.new({:unit => Unit.for(new_unit), :reference_value => @reference_value * other.reference_value})
+      Quantity.new({:unit => other.unit * @unit, :reference_value => @reference_value * other.reference_value})
     else
       raise ArgumentError, "Cannot multiply #{other} with #{self}"
     end
@@ -233,17 +232,6 @@ class Quantity
   # @return [Quantity]
   def +@
     self
-  end
-
-  # 'multiply' text from two quantities to come up with a new description
-  # @private
-  def multiply_text(first, second)
-    if (first == second)
-      "#{first} squared"
-    else
-      # we don't really support this yet.
-      "#{first} * #{second}"
-    end
   end
 
   # Integer representation

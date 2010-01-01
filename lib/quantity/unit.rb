@@ -188,6 +188,16 @@ class Quantity
           @name = name
           @value = value
         end
+
+        # Unit multiplication.
+        # @param [Unit] other
+        def *(other)
+          unless self == other
+            raise ArgumentError, "Cannot multiply #{self.name} with #{other.name}"
+          else
+            Unit.for("#{@name}^2")
+          end
+        end
       end
     end
 
