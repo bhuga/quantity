@@ -58,24 +58,10 @@ class Quantity
       def convert_proc(to)
         to_unit = Unit.for(to)
         to_value = to_unit.value.to_f
-        if (to.is_a? Symbol)
+        # symbol equals first-order unit.
+        unless (to.is_a?(Derived))
           to_value = to_value**@num_power 
         end
-        #if (to_unit.name == name)
-          # we're converting to ourself.
-        #  conversion_value = value
-        #elsif to_unit.measures == @num_unit.measures
-          # like m^2 => foot
-        #  conversion_value = 
-        #end
-        #conversion_value = case to_unit.measures
-        #  when measures
-        #    value
-        #  when @num_unit.measures
-        #    @num_unit.value
-          #when @den_unit.measures
-          #  @den_unit.value
-        #end
         puts "got cv #{value} with me #{measures}, to #{to_unit.measures} and num #{@num_unit.measures}"
         if (defined? Rational) && defined?(value.gcd)
           lambda do | from |
@@ -110,6 +96,36 @@ class Quantity
           when @num_unit.measures
             Unit.for("#{Unit.for(to).name}^#{@num_power}")
         end
+      end
+
+      # Return a new derived type by multiplying this one with the given one
+      # @param [Unit]
+      # @return [Unit]
+      def *(other)
+        unless can_multiply?(other)
+          raise ArgumentError, "Cannot multiply #{self.name} with #{other.name}"
+        else
+          if defined? other.num_unit
+            Unit.for("#{@num_unit.name}^#{@num_power + other.num_power}")
+          else
+            Unit.for("#{@num_unit.name}^#{@num_power + 1}")
+          end
+        end
+      end
+
+      # Can this unit create a new unit by multiplying with the given one?
+      # @param [Any] other
+      # @return [Boolean]
+      def can_multiply?(other, other_checked = false)
+        other.is_a?(Unit) && @num_unit.name == other.name || @num_unit.name == other.num_unit.name
+      end
+
+      # Associate this derived unit with the associated base units, such as length^3
+      # @param [String] source
+      def self.derived_from(source)
+        puts "class: #{self}, adding #{source}"
+        unit = self.new(source)
+        add_alias(unit, source)
       end
 
     end

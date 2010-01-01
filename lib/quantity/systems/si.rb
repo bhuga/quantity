@@ -49,12 +49,12 @@ module SI
 
   units['meter']    = Quantity::Unit::Length
   units['gram']     = Quantity::Unit::Mass
-  units['liter']    = Quantity::Unit::Volume
   units['second']   = Quantity::Unit::Time
   units['kelvin']   = Quantity::Unit::Temperature
   units['candela']  = Quantity::Unit::Luminosity
   units['ampere']   = Quantity::Unit::Current
   units['mole']     = Quantity::Unit::Substance
+  units['liter']    = Quantity::Unit::Volume
 
   aliases['ampere'] = ['amp', 'amps', 'A']
   aliases['liter'] = ['litre', 'litres']

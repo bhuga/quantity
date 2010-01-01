@@ -53,8 +53,8 @@ class Quantity
     autoload :Temperature, 'quantity/unit/temperature'
     autoload :Luminosity,  'quantity/unit/luminosity'
     autoload :Substance,   'quantity/unit/substance'
-    autoload :Volume,      'quantity/unit/volume'
     autoload :Derived,     'quantity/unit/derived'
+    autoload :Volume,      'quantity/unit/volume'
 
     # list of units by names and aliases
     # @private
@@ -199,13 +199,22 @@ class Quantity
 
         # Unit multiplication.
         # @param [Unit] other
+        # @return [Unit]
         def *(other)
-          unless self == other
+          unless can_multiply?(other)
             raise ArgumentError, "Cannot multiply #{self.name} with #{other.name}"
           else
             Unit.for("#{@name}^2")
           end
         end
+
+        # Can this unit create a new unit by multiplying with the given one?
+        # @param [Any] other
+        # @return [Boolean]
+        def can_multiply?(other, other_checked = false)
+          self == other || other.is_a?(Unit) && !other_checked && other.can_multiply?(self, true)
+        end
+
       end
     end
 

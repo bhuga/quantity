@@ -36,7 +36,7 @@ describe Quantity::Unit do
   it "should multiply units" do
     (Quantity::Unit.for(:meter) * Quantity::Unit.for(:meter)).should == Quantity::Unit.for('m^2')
     (Quantity::Unit.for('m^2') * Quantity::Unit.for(:meter)).should == Quantity::Unit.for('m^3')
-    (Quantity::Unit.for(:foot) * Quantity::Unit.for(:meter)).should raise_error ArgumentError
+    lambda {(Quantity::Unit.for(:foot) * Quantity::Unit.for(:meter))}.should raise_error ArgumentError
   end
 end
 

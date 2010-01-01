@@ -185,7 +185,7 @@ class Quantity
   def *(other)
     if (other.is_a?(Numeric))
       Quantity.new(@value * other, @unit)
-    elsif(other.is_a?(Quantity) && self.units == other.units)
+    elsif(other.is_a?(Quantity) && @unit.can_multiply?(other.unit))
       Quantity.new({:unit => other.unit * @unit, :reference_value => @reference_value * other.reference_value})
     else
       raise ArgumentError, "Cannot multiply #{other} with #{self}"
