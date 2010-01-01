@@ -52,6 +52,8 @@ describe Quantity do
     12.meters.should == 1200.centimeters
     (12.meters + 12).should == 24.meters
     (12.meters + 15.centimeters).should == 1215.centimeters
+    (2 + 5.meters).should == 7.meters
+    (2.5 + 5.meters).should == 7.5.meters
   end
 
   it "should fail to add items of different types" do
@@ -62,6 +64,8 @@ describe Quantity do
     (12.meters - 3).should == 9.meters
     (12.meters - 3650.centimeters).should == -2450.centimeters
     lambda { (12.meters - 3650.picograms)}.should raise_error ArgumentError
+    (15 - 5.meters).should == 10.meters
+    (15.5 - 5.meters).should == 10.5.meters
   end
 
   it "should support basic math operations" do
@@ -85,6 +89,8 @@ describe Quantity do
     (-11.meters).divmod(3.5.meters).should == [-4.meter,3.0.meter]
     11.5.meters.divmod(3.5).should == [3.meter,1.0.meter]
     11.5.meters.divmod(3.5.meters).should == [3.meter,1.0.meter]
+    +4.kilograms.should == 4.kilograms
+    0.kilograms.zero?.should == true
   end
 
   it "should multiply any items" do
@@ -96,6 +102,12 @@ describe Quantity do
     (1.meter * Quantity.new(1,'m^2')).units.should == "meter^3"
     (3.meter * Quantity.new(1,'m^2')).units.should == "meter^3"
     (3.meter * Quantity.new(1,'m^2')).should == 3
+  end
+
+  it "should raise to powers" do
+    (2.meters**2).should == Quantity.new(4,"meter^2")
+    lambda {2.meters**-1}.should raise_error ArgumentError
+    lambda {2.meters**1.5}.should raise_error ArgumentError
   end
 
   it "should divide any items" do

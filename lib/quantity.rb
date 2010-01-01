@@ -110,6 +110,19 @@ class Quantity
     end
   end
 
+  # Ruby coercion.  Allows things like 2 + 5.meters
+  # @return [Quantity, Quantity]
+  def coerce(other)
+    if other.class == @value.class
+      [Quantity.new(other, @unit),self]
+    elsif defined? Rational &&  defined? @value.gcd && defined? other.gcd
+      [Quantity.new(Rational(other), @unit), self] 
+    else
+      [Quantity.new(other.to_f, @unit),self]
+    end
+  end
+
+
   # Addition.  Add two quantities of the same type.  Do not need to have the same units.
   # @param [Quantity Numeric] other
   # @return [Quantity]
@@ -180,6 +193,21 @@ class Quantity
     end
   end
 
+  # Exponentiation.  Quantities cannot be raised to negative or fractional powers, only
+  # positive Fixnum.
+  # @param [Numeric]
+  # @return [Quantity]
+  def **(power)
+    unless power.is_a?(Fixnum) && power > 0
+      raise ArgumentError, "Quantities can only be raised to fixed powers (given #{power})"
+    end
+    if power == 1
+      self
+    else
+      self * self**(power - 1)
+    end
+  end
+
   # Mod
   # @return [Quantity]
   def %(other)
@@ -199,6 +227,12 @@ class Quantity
   # @return [Quantity]
   def -@
     Quantity.new({:unit => @unit, :reference_value => @reference_value * -1})
+  end
+
+  # Unary + (self)
+  # @return [Quantity]
+  def +@
+    self
   end
 
   # 'multiply' text from two quantities to come up with a new description
@@ -260,6 +294,12 @@ class Quantity
     else
       raise ArgumentError, "Cannot divmod #{other} with #{self}"
     end
+  end
+
+  # Returns true if self has a zero value
+  # @return [Boolean]
+  def zero?
+    @value.zero?
   end
 
   # Convert to another unit of measurement.
