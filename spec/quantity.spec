@@ -28,6 +28,7 @@ describe Quantity do
   it "should convert from one type to another" do
     1.meter.in_centimeters.should == 100
     50.centimeters.to_meters.should == 0.5
+    10.meters.convert(:feet).should be_close 32.808399.feet, 10**-6
   end
 
   it "should convert from one type to another when not using the reference" do
@@ -58,13 +59,31 @@ describe Quantity do
   it "should subtract items of the same type" do
     (12.meters - 3).should == 9.meters
     (12.meters - 3650.centimeters).should == -2450.centimeters
-    lambda { (12.meters - 3650.picograms)} .should raise_error ArgumentError
+    lambda { (12.meters - 3650.picograms)}.should raise_error ArgumentError
+  end
+
+  it "should support basic math operations" do
+    ((-(5.seconds)).abs).should == 5.seconds
+    (-5).seconds.abs.should == 5.seconds
+    (-(35.meters)).should be_close -(114.829396.feet), 10**-5
+    (35.meters % 6).should == 5.meters
+    (35.meters % 6.feet).should be_close 0.2528.meters, 10**-5
+    4.kilograms.modulo(15.grams).should == 10.grams
+    15.2.meters.truncate.should == 15.meters
+    15.6.meters.round.should == 16.meters
+    15.2.meters.ceil.should == 16.meters
+    (-5.5.meters).floor.should == -6.meters
   end
 
   it "should multiply any items" do
     (2.meters * 5.meters).should == 10
-    (2.meters * 2.meters).unit.name == "meter squared"
-    (2.meters * 2.meters).unit.measures == "length squared"
+    lambda { (1.meters * 1.foot).unit.name }.should raise_error ArgumentError
+    (2.meters * 2.meters).unit.name.should == "meter^2"
+    (2.meters * 2.meters).unit.measures.should == "length^2"
+    (1.meter * Quantity.new(1,'m^2')).measures.should == "length^3"
+    (1.meter * Quantity.new(1,'m^2')).units.should == "meter^3"
+    (3.meter * Quantity.new(1,'m^2')).units.should == "meter^3"
+    (3.meter * Quantity.new(1,'m^2')).should == 3
   end
 
   it "should divide any items" do
@@ -74,20 +93,29 @@ describe Quantity do
   end
 
   it "should convert derived units" do
-    Quantity.new(2,'m^2').to_feet.should == 21.5278208
+    Quantity.new(2,'m^2').to_feet.to_f.should be_close 21.5278208, 10**-5
   end
 
-  it "should figure out derived units" do
-    1.centimeter * 1.centimeter * 1.centimer.should == 1.cc
+  it "should convert derived classes to hard classes" do
+    (1.centimeter * 1.centimeter * 1.centimeter).should == 1.cc
     (1.centimeter * 1.centimeter * 1.centimer).measures.should == :volume
     (1.centimeter * 1.centimeter).measures.should == :area
     (30.meters / 1.second).measures.should == :speed
+  end
+
+  it "should reduce derived units" do
+    (1.meter / 1.second) * 1.second.should == 1.meter
   end
 
   it "should be comparable" do
     2.meters.should be < 3.meters
     150.centimeters.should be > 1.meter
     [1.meter, 1.foot, 1.inch].sort.should == [1.inch, 1.foot, 1.meter]
+  end
+
+  it "should have a string representation" do
+    2.meters.to_s.should == "2 meter"
+    (2.meters * 2.meters).to_s.should == "4.0 meter^2"
   end
 
 end

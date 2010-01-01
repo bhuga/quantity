@@ -27,9 +27,7 @@ class Quantity
         (@den_unit,@den_power) = parse_unit.call(denominator) if denominator
         reference_unit_name = "#{@num_unit.reference_unit.name}^#{@num_power}"
         @reference_unit = reference_unit_name == new_name ? self : Unit.for(reference_unit_name)
-        # the multiplier for a derived class does not have the power applied to it, because
-        # it's in reference to a squared unit which will do that.
-        @value = (@num_unit.value)
+        @value = (@num_unit.value)**@num_power
         # TODO: check for a hard class that matches this signature
         puts "made a new derived class #{measures}, val #{@value} numu #{@num_unit.name} p #{@num_power}"
       end
@@ -53,12 +51,16 @@ class Quantity
         name += "^#{@den_unit}" if @den_power
         name 
       end
+
       # Provide a lambda to do a conversion from one unit to another
       # @param to [Unit Symbol]
       # @return [Proc]
       def convert_proc(to)
         to_unit = Unit.for(to)
-        conversion_value = value
+        to_value = to_unit.value.to_f
+        if (to.is_a? Symbol)
+          to_value = to_value**@num_power 
+        end
         #if (to_unit.name == name)
           # we're converting to ourself.
         #  conversion_value = value
@@ -74,15 +76,15 @@ class Quantity
           #when @den_unit.measures
           #  @den_unit.value
         #end
-        puts "got cv #{conversion_value} with me #{measures}, to #{to_unit.measures} and num #{@num_unit.measures}"
-        if (defined? Rational) && defined?(conversion_value.gcd)
+        puts "got cv #{value} with me #{measures}, to #{to_unit.measures} and num #{@num_unit.measures}"
+        if (defined? Rational) && defined?(value.gcd)
           lambda do | from |
-            puts "multi: from: #{from} cv: #{conversion_value} tuv: #{to_unit.value} (total #{Rational(conversion_value,to_unit.value)**@num_power} val: #{value}"
-            from * Rational(conversion_value,to_unit.value)**@num_power
+            puts "multi: from: #{from} cv: #{value} tuv: #{to_value} (total #{Rational(value,to_value)**@num_power} val: #{value}"
+            from * Rational(value,to_value)
            end
         else
           lambda do | from |
-            from * (conversion_value / to_unit.value.to_f)**@num_power
+            from * (value / to_value.to_f)
           end
         end
       end

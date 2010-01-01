@@ -71,13 +71,17 @@ class Quantity
     # @param [Unit Symbol String] Unit, name or alias of unit, or description of derived unit
     # @return [Unit]
     def self.for(unit)
-      case unit
-        when Unit
-          unit
-        when Symbol
-          @@units_hash[unit]
-        when String
-          Unit::Derived.new(unit)
+      if @@units_hash[unit]
+        @@units_hash[unit]
+      else
+        case unit
+          when Unit
+            unit
+          when String
+            new_unit = Unit::Derived.new(unit)
+            new_unit.class.register_unit new_unit, unit
+            new_unit
+        end
       end
     end
 
@@ -126,21 +130,23 @@ class Quantity
         # Register a unit with the given names
         # @param [Symbol] original
         # @param [Array] *aliases 
-        def self.register_unit(unit, *names)
-          unit = Unit.for(unit)
+        def self.add_alias(unit, *names)
+          unit = Unit.for(unit) unless unit.is_a?(Unit)
           names.each do | name | 
             unless (Unit.for(name).nil? || Unit.for(name) == unit)
               message = "WARNING: Quantity::Unit#register_unit: Overwriting unit alias #{name}"
               message += " (currently (#{Unit.for(name).name}) with #{Unit.for(name).name}"
               warn message
             end
-            @@units_hash[name] = unit
+            register_unit(unit,name)
           end
         end
 
-        # Sugar to register_unit for the DSL
-        class <<self
-          alias_method :add_alias, :register_unit
+        # Save the given unit in the registry
+        # @param [Unit] name
+        # @param [String Symbol] alias
+        def self.register_unit(unit, name)
+            @@units_hash[name] = unit
         end
        
         # Provide a lambda to do a conversion from one unit to another
@@ -206,7 +212,7 @@ class Quantity
     # @param [Numeric] return a string representing this numeric as this unit
     # @return [String]
     def s_for(s)
-      "#{s} #{@name}"
+      "#{s} #{name}"
     end
   end
 end

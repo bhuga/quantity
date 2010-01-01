@@ -100,6 +100,16 @@ class Quantity
     @unit.name
   end
 
+  # Abs implementation
+  # @return [Quantity]
+  def abs
+    if @reference_value < 0
+      -self
+    else
+      self
+    end
+  end
+
   # Addition.  Add two quantities of the same type.  Do not need to have the same units.
   # @param [Quantity Numeric] other
   # @return [Quantity]
@@ -141,15 +151,11 @@ class Quantity
   # @return [-1 0 1]
   def <=>(other)
     if (other.is_a?(Numeric))
-      other <=> @value
-    elsif(other.is_a?(Quantity))
-      if (@unit.measures == other.unit.measures)
-        @reference_value <=> other.reference_value
-      else
-        raise ArgumentError, "Cannot compare #{@unit.measures} to #{other.measures}"
-      end
+      @value <=> other
+    elsif(other.is_a?(Quantity) && measures == other.measures)
+      @reference_value <=> other.reference_value
     else
-      raise ArgumentError, "Cannot compare #{other} to #{self}"
+      nil
     end
   end
 
@@ -159,13 +165,33 @@ class Quantity
   def *(other)
     if (other.is_a?(Numeric))
       Quantity.new(@value * other, @unit)
-    elsif(other.is_a?(Quantity))
-      new_measures = multiply_text(self.measures,other.measures)
+    elsif(other.is_a?(Quantity) && self.units == other.units)
       new_unit = multiply_text(self.units,other.units)
       Quantity.new({:unit => Unit.for(new_unit), :reference_value => @reference_value * other.reference_value})
     else
       raise ArgumentError, "Cannot multiply #{other} with #{self}"
     end
+  end
+
+  # Mod
+  # @return [Quantity]
+  def %(other)
+    if (other.is_a?(Numeric))
+      Quantity.new(@value % other, @unit)
+    elsif(other.is_a?(Quantity) && self.measures == other.measures)
+      Quantity.new({:unit => @unit, :reference_value => @reference_value % other.reference_value})
+    else
+      raise ArgumentError, "Cannot modulo #{other} with #{self}"
+    end
+  end
+
+  # Both names for modulo
+  alias_method :modulo, :%
+
+  # Negation
+  # @return [Quantity]
+  def -@
+    Quantity.new({:unit => @unit, :reference_value => @reference_value * -1})
   end
 
   # 'multiply' text from two quantities to come up with a new description
@@ -174,6 +200,7 @@ class Quantity
     if (first == second)
       "#{first} squared"
     else
+      # we don't really support this yet.
       "#{first} * #{second}"
     end
   end
@@ -189,6 +216,31 @@ class Quantity
   def to_f
     @value.to_f
   end
+
+  # Round this value to the nearest integer
+  # @return [Quantity]
+  def round
+    Quantity.new(@value.round, @unit)
+  end
+
+  # Truncate this value to an integer
+  # @return [Quantity]
+  def truncate
+    Quantity.new(@value.truncate, @unit)
+  end
+
+  # Largest integer quantity less than or equal to this
+  # @return [Quantity]
+  def floor
+    Quantity.new(@value.floor, @unit)
+  end
+
+  # Smallest integer quantity greater than or equal to this
+  # @return [Quantity]
+  def ceil
+    Quantity.new(@value.ceil, @unit)
+  end
+
 
   # Convert to another unit of measurement.
   # For most uses, Quantity#to_<unit> is what you want, but this can be handy
