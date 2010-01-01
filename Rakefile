@@ -13,6 +13,12 @@ Spec::Rake::SpecTask.new('spec') do |t|
   t.spec_opts = ["-cfn"]
 end
 
+desc "specs with backtrace"
+Spec::Rake::SpecTask.new('tracespec') do |t|
+  t.spec_files = FileList['spec/*.spec']
+  t.spec_opts = ["-bcfn"]
+end
+
 desc "package yardocs"
 YARD::Rake::YardocTask.new('yard') do |t|
   # see .yardopts for the action
