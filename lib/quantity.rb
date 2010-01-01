@@ -159,6 +159,13 @@ class Quantity
     end
   end
 
+  # Type-aware equality
+  # @param [Any]
+  # @return [Boolean]
+  def eql?(other)
+    other.is_a?(Quantity) && other.units == units && self == other
+  end
+
   # Multiplication.
   # @param [Numeric, Quantity]
   # @return [Quantity]
@@ -241,6 +248,19 @@ class Quantity
     Quantity.new(@value.ceil, @unit)
   end
 
+  # Divmod
+  # @return [Quantity,Quantity]
+  def divmod(other)
+    if (other.is_a?(Numeric))
+      (q, r) = @value.divmod(other)
+      [Quantity.new(q,@unit),Quantity.new(r,@unit)]
+    elsif (other.is_a?(Quantity) && measures == other.measures)
+      (q, r) = @value.divmod(other.value)
+      [Quantity.new(q,@unit),Quantity.new(r,@unit)]
+    else
+      raise ArgumentError, "Cannot divmod #{other} with #{self}"
+    end
+  end
 
   # Convert to another unit of measurement.
   # For most uses, Quantity#to_<unit> is what you want, but this can be handy

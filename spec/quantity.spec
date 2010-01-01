@@ -44,6 +44,8 @@ describe Quantity do
     1.meter.should == 100.centimeter
     1.meter.should_not == 1.centimeter
     1.picograms.should_not == 1.centimeter
+    1.meter.eql?(100.centimeters).should == false
+    1.meter.eql?(1.meter).should == true
   end
 
   it "should add items of the same type" do
@@ -73,6 +75,16 @@ describe Quantity do
     15.6.meters.round.should == 16.meters
     15.2.meters.ceil.should == 16.meters
     (-5.5.meters).floor.should == -6.meters
+    11.meters.divmod(3).should == [3.meter,2.meter]
+    11.meters.divmod(3.meters).should == [3.meter,2.meter]
+    11.meters.divmod(-3).should == [-4.meter,-1.meter]
+    11.meters.divmod(-3.meters).should == [-4.meter,-1.meter]
+    11.meters.divmod(3.5).should == [3.meter,0.5.meter]
+    11.meters.divmod(3.5.meters).should == [3.meter,0.5.meter]
+    (-11.meters).divmod(3.5).should == [-4.meter,3.0.meter]
+    (-11.meters).divmod(3.5.meters).should == [-4.meter,3.0.meter]
+    11.5.meters.divmod(3.5).should == [3.meter,1.0.meter]
+    11.5.meters.divmod(3.5.meters).should == [3.meter,1.0.meter]
   end
 
   it "should multiply any items" do
