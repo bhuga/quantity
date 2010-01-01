@@ -32,5 +32,11 @@ describe Quantity::Unit do
     Quantity::Unit.for('m^2').convert_proc('foot^2').call(4).to_f.should be_close 43.0556417, 10**-5
     Quantity::Unit.for('mm^2').convert_proc('m^2').call(4000000).to_i.should == 4
   end
+
+  it "should multiply units" do
+    (Quantity::Unit.for(:meter) * Quantity::Unit.for(:meter)).should == Quantity::Unit.for('m^2')
+    (Quantity::Unit.for('m^2') * Quantity::Unit.for(:meter)).should == Quantity::Unit.for('m^3')
+    (Quantity::Unit.for(:foot) * Quantity::Unit.for(:meter)).should raise_error ArgumentError
+  end
 end
 

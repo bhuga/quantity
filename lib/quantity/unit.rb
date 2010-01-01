@@ -189,6 +189,14 @@ class Quantity
           @value = value
         end
 
+        # Unit equality
+        # @param [Any]
+        # @param [Unit]
+        def ==(other)
+          other.is_a?(Unit) && other.name == name
+        end
+
+
         # Unit multiplication.
         # @param [Unit] other
         def *(other)
