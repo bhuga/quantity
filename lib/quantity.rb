@@ -73,10 +73,11 @@ class Quantity
         @unit = Unit.for(value[:unit])
         @reference_value = value[:reference_value] || (value[:value] * @unit.value)
         @value = @unit.reference_unit.convert_proc(@unit).call(@reference_value)
+        #@value = @unit.convert_proc(@unit).call(@reference_value)
       when Numeric
         @unit = Unit.for(unit)
         @value = value
-        @reference_value = value * unit.value 
+        @reference_value = value * @unit.value 
     end
   end
 
@@ -161,6 +162,7 @@ class Quantity
     elsif(other.is_a?(Quantity))
       new_measures = multiply_text(self.measures,other.measures)
       new_unit = multiply_text(self.units,other.units)
+      Quantity.new({:unit => Unit.for(new_unit), :reference_value => @reference_value * other.reference_value})
     else
       raise ArgumentError, "Cannot multiply #{other} with #{self}"
     end
@@ -168,7 +170,7 @@ class Quantity
 
   # 'multiply' text from two quantities to come up with a new description
   # @private
-  def self.multiply_text(first, second)
+  def multiply_text(first, second)
     if (first == second)
       "#{first} squared"
     else
@@ -193,10 +195,10 @@ class Quantity
   # for variable units.
   # @param [Unit Symbol]
   def convert(to)
-    if (Unit.for(to).measures != @unit.measures)
+    unless @unit.can_convert_to?(to)
       raise ArgumentError,"Cannot convert #{@unit.measures} to #{to}" 
     else
-      Quantity.new({:unit => to, :reference_value => @reference_value})
+      Quantity.new({:unit => @unit.convert(to), :reference_value => @reference_value})
     end  
   end
 

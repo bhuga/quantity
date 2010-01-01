@@ -54,6 +54,7 @@ class Quantity
     autoload :Luminosity,  'quantity/unit/luminosity'
     autoload :Substance,   'quantity/unit/substance'
     autoload :Volume,      'quantity/unit/volume'
+    autoload :Derived,     'quantity/unit/derived'
 
     # list of units by names and aliases
     # @private
@@ -67,10 +68,17 @@ class Quantity
     end
     
     # Unit for a given symbol
-    # @param [Unit Symbol] Unit, name or alias of unit
+    # @param [Unit Symbol String] Unit, name or alias of unit, or description of derived unit
     # @return [Unit]
     def self.for(unit)
-      unit.is_a?(Unit) ? unit : @@units_hash[unit]
+      case unit
+        when Unit
+          unit
+        when Symbol
+          @@units_hash[unit]
+        when String
+          Unit::Derived.new(unit)
+      end
     end
 
     # Adds some methods to children when they extend this class.
@@ -143,15 +151,29 @@ class Quantity
           unless (to_unit.measures == self.measures)
             raise ArgumentError, "Cannot convert #{self.measures} to #{to_unit.measures}"
           end
-          if defined? Rational
+          if (defined? Rational) && defined?(@value.gcd)
             lambda do | from |
-              Rational(from, to_unit.value) * @value
+              from * Rational(@value, to_unit.value) 
             end
           else
             lambda do | from |
-              (from / to_unit.value.to_f) * @value
+              from * (@value / to_unit.value.to_f)
             end
           end
+        end
+
+        # Can this unit be converted to the target unit?
+        # @param [Symbol String Unit]
+        # @return [Boolean]
+        def can_convert_to?(to)
+          Unit.for(to).measures == measures
+        end
+
+        # Return the unit that will be converted to when converting to this unit.
+        # @param [Symbol String Unit]
+        # @return [Unit]
+        def convert(to)
+          Unit.for(to)
         end
 
         ##

@@ -23,5 +23,10 @@ describe Quantity::Unit do
     meters_to_inches = Quantity::Unit.for(:meter).convert_proc(:inches)
     meters_to_inches.call(1).should == Rational(140737488355328000, 3574732204225331)
   end
+
+  it "should return a conversion proc for derived units" do
+    Quantity::Unit.for('m^2').convert_proc(:feet).call(4).to_f.should be_close 43.0556417, 10**-5
+    Quantity::Unit.for('nanometers^2').convert_proc(:feet).call(10**20).to_f.should be_close 1076.39104, 10**-5
+  end
 end
 

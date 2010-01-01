@@ -3,6 +3,10 @@ $:.unshift(File.expand_path(File.join(File.dirname(__FILE__), 'lib')))
 require 'quantity'
 require 'quantity/systems/si'
 require 'quantity/systems/us'
+x = Quantity::Unit.for("m^2")
+y = x.convert_proc(:feet)
+y.call(2)
+
 
 describe Quantity do
 
@@ -62,7 +66,7 @@ describe Quantity do
   end
 
   it "should multiply any items" do
-    (2.meters * 2.meters).should == 4
+    (2.meters * 5.meters).should == 10
     (2.meters * 2.meters).unit.name == "meter squared"
     (2.meters * 2.meters).unit.measures == "length squared"
   end
@@ -71,6 +75,10 @@ describe Quantity do
     (2.meters / 2.picograms).should == 5
     (2.meters / 2.picograms).measures.should == "length per mass"
     (2.meters / 2.picograms).units.should == "meters per picogram"
+  end
+
+  it "should convert derived units" do
+    Quantity.new(2,'m^2').to_feet.should == 21.5278208
   end
 
   it "should figure out derived units" do
