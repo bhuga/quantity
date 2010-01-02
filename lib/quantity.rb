@@ -1,5 +1,7 @@
 require 'quantity/version'
-
+require 'quantity/dimension'
+require 'quantity/dimension/base'
+require 'quantity/unit'
 #
 # A quantity of something.  Quantities are immutable; conversions and other operations return
 # a new quantity.
@@ -72,7 +74,7 @@ class Quantity
       when Hash
         @unit = Unit.for(value[:unit])
         @reference_value = value[:reference_value] || (value[:value] * @unit.value)
-        @value = @unit.reference_unit.convert_proc(@unit).call(@reference_value)
+        @value = @unit.dimension.reference_unit.convert_proc(@unit).call(@reference_value)
         #@value = @unit.convert_proc(@unit).call(@reference_value)
       when Numeric
         @unit = Unit.for(unit)
@@ -91,7 +93,7 @@ class Quantity
   # What this measures
   # @return [Symbol String] What this measures.  Derived types will be a string
   def measures
-    @unit.measures
+    @unit.dimension
   end
 
   # Units of measurement

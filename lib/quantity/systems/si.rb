@@ -1,3 +1,5 @@
+require 'quantity/dimension/base'
+
 # SI units for Length, Mass, Luminosity, Current, Substance,
 # Temperature, and Time.  Units from yocto- to yotta- are supplied.
 # 
@@ -20,7 +22,7 @@
 # @see http://physics.nist.gov/cuu/Units/units.html
 # @see http://physics.nist.gov/cuu/Units/current.html
 # @see http://physics.nist.gov/cuu/Units/prefixes.html
-module SI
+class Quantity::Unit
   prefixes = {}
   units = {}
   aliases = {}
@@ -47,13 +49,13 @@ module SI
   prefixes['zepto'] = 10 ** -18
   prefixes['yocto'] = 10 ** -21
 
-  units['meter']    = Quantity::Unit::Length
-  units['gram']     = Quantity::Unit::Mass
-  units['second']   = Quantity::Unit::Time
-  units['kelvin']   = Quantity::Unit::Temperature
-  units['candela']  = Quantity::Unit::Luminosity
-  units['ampere']   = Quantity::Unit::Current
-  units['mole']     = Quantity::Unit::Substance
+  units['meter']    = :length
+  units['gram']     = :mass
+  units['second']   = :time
+  units['kelvin']   = :temperature
+  units['candela']  = :luminosity
+  units['ampere']   = :current
+  units['mole']     = :substance
   # liter is a special cased, handled separately below
 
   aliases['ampere'] = ['amp', 'amps', 'A']
@@ -62,42 +64,36 @@ module SI
   aliases['mole'] = ['mol']
   aliases['kelvin'] = ['K']
 
-  units.each do | unit, classname |
-    classname.class_eval do
-      prefixes.each do | prefix, value |
-        add_unit "#{prefix + unit}".to_sym, value, "#{prefix + unit}s".to_sym
-        if aliases[unit]
-          aliases[unit].each do | unit_alias |
-            add_alias "#{prefix + unit}".to_sym, "#{prefix + unit_alias}".to_sym
-          end
+  units.each do | unit, dimension |
+    prefixes.each do | prefix, value |
+      add_unit dimension, "#{prefix + unit}".to_sym, value, "#{prefix + unit}s".to_sym
+      if aliases[unit]
+        aliases[unit].each do | unit_alias |
+          add_alias "#{prefix + unit}".to_sym, "#{prefix + unit_alias}".to_sym
         end
       end
     end
   end
 
-  class Quantity::Unit::Length 
-    add_alias :kilometer, :km
-    add_alias :centimeter, :cm
-    add_alias :meter, :m
-    add_alias :nanometer, :nm
-    add_unit :angstrom, 10 ** -7, :angstroms
-  end
+  add_alias :kilometer, :km
+  add_alias :centimeter, :cm
+  add_alias :meter, :m
+  add_alias :nanometer, :nm
+  add_unit :length, :angstrom, 10 ** -7, :angstroms
 
-  class Quantity::Unit::Mass
-    add_alias :kilogram, :kg
-    add_alias :gram, :g
-    add_alias :milligram, :mg
-    add_alias :megagram, :tonne, :tonnes
-  end
+  add_alias :kilogram, :kg
+  add_alias :gram, :g
+  add_alias :milligram, :mg
+  add_alias :megagram, :tonne, :tonnes
 
-  Quantity::Unit::Volume.class_eval do
-    prefixes.each do | prefix, value |
-      add_unit "#{prefix}liter".to_sym, value * 1000, "#{prefix}liters".to_sym
-      (aliases['liter']).each do | unit_alias |
-        add_alias "#{prefix}liter".to_sym, "#{prefix + unit_alias}".to_sym
-      end
-    end
-    add_alias :liter, :l
-  end
+#  Quantity::Unit::Volume.class_eval do
+#    prefixes.each do | prefix, value |
+#      add_unit "#{prefix}liter".to_sym, value * 1000, "#{prefix}liters".to_sym
+#      (aliases['liter']).each do | unit_alias |
+#        add_alias "#{prefix}liter".to_sym, "#{prefix + unit_alias}".to_sym
+#      end
+#    end
+#    add_alias :liter, :l
+#  end
 
 end

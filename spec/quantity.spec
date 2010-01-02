@@ -16,8 +16,8 @@ describe Quantity do
   end
 
   it "should know what it measures" do
-    2.meters.unit.measures.should == :length
-    2.meters.measures.should == :length
+    2.meters.unit.dimension.name.should == :length
+    2.meters.measures.name.should == :length
   end
 
   it "should know its units" do
