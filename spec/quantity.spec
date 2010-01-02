@@ -95,25 +95,26 @@ describe Quantity do
 
   it "should multiply any items" do
     (2.meters * 5.meters).should == 10
-    lambda { (1.meters * 1.foot).unit.name }.should raise_error ArgumentError
+    # on second thought, this works :D
+    #lambda { (1.meters * 1.foot).unit.name }.should raise_error ArgumentError
     (2.meters * 2.meters).unit.name.should == "meter^2"
-    (2.meters * 2.meters).unit.measures.should == "length^2"
-    (1.meter * Quantity.new(1,'m^2')).measures.should == "length^3"
+    (2.meters * 2.meters).unit.dimension.string_form.should == "length^2"
+    (1.meter * Quantity.new(1,'m^2')).unit.dimension.string_form.should == "length^3"
     (1.meter * Quantity.new(1,'m^2')).units.should == "meter^3"
     (3.meter * Quantity.new(1,'m^2')).units.should == "meter^3"
     (3.meter * Quantity.new(1,'m^2')).should == 3
   end
 
   it "should raise to powers" do
-    (2.meters**2).should == Quantity.new(4,"meter^2")
+    (2.meters**2).should be_close Quantity.new(4,"meter^2"), 10**-5
     lambda {2.meters**-1}.should raise_error ArgumentError
     lambda {2.meters**1.5}.should raise_error ArgumentError
   end
 
   it "should divide any items" do
-    (2.meters / 2.picograms).should == 5
-    (2.meters / 2.picograms).measures.should == "length per mass"
-    (2.meters / 2.picograms).units.should == "meters per picogram"
+    (2.meters / 2.picograms).unit.dimension.string_form.should == "length/mass"
+    (2.meters / 2.picograms).units.should == "meter/picogram"
+    (10.meters / 2.picograms).should be_close 5, 10**-5
   end
 
   it "should convert derived units" do
@@ -132,7 +133,7 @@ describe Quantity do
   end
 
   it "should reduce derived units" do
-    (1.meter / 1.second) * 1.second.should == 1.meter
+    ((1.meter / 1.second) * 1.second).should == 1.meter
   end
 
   it "should be comparable" do

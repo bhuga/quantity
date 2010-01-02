@@ -32,7 +32,8 @@ class Quantity
     # @param [Symbol String Unit] to
     # @return [Unit]
     def self.for(to)
-      to.is_a?(Unit) ? to : @@units[to]
+      unit = to.is_a?(Unit) ? to : @@units[to]
+      #unit.nil? ? Unit::Compound.from_string_form(to) : unit
     end
 
     # Whether or not the given symbol or string refers to an existing unit
@@ -129,12 +130,28 @@ class Quantity
     # @param [Unit] other
     # @return [Unit]
     def *(other)
-      if self == other
-        Unit.for("#{@name}^2")
-      elsif other.can_multiply?(self)
+      if other.is_a?(Unit::Compound)
         other * self
+      elsif other.is_a?(self.class)
+        Unit::Compound.new({ :dimension => dimension * other.dimension, 
+                             :units => { dimension => self, other.dimension => other}})
       else
-        raise ArgumentError, "Cannot multiply #{self.name} with #{other.name}"
+        raise ArgumentError, "Cannot multiply #{self} with #{other}"
+      end
+    end
+
+    # Unit division
+    # @param [Unit] other
+    # @return [Unit]
+    def /(other)
+      if other.is_a?(Unit::Compound)
+        Unit::Compound.new({ :dimension => dimension / other.dimension, 
+                             :units => other.units.merge({ dimension => self}) })
+      elsif other.is_a?(self.class)
+        Unit::Compound.new({ :dimension => dimension / other.dimension, 
+                             :units => { dimension => self, other.dimension => other}})
+      else
+        raise ArgumentError, "Cannot divide #{self} by #{other}"
       end
     end
 
@@ -152,6 +169,16 @@ class Quantity
       end
     end
 
+    # Exponentiation
+    # @param other [Numeric]
+    # @return [Unit::Compound]
+    def **(other)
+      if other.is_a?(Fixnum) && other > 0
+        other == 1 ? self : self * self**(other-1)
+      else
+        raise ArgumentError, "#{self} cannot be raised to #{other} power."
+      end
+    end
 
     # A compound unit, such as meter^2.  A compound unit, like a normal unit, has a single domain.
     # That domain is a compound domain, the result of multiplying and dividing base domains.
@@ -173,9 +200,83 @@ class Quantity
       end
 
 
+      # Unit multiplication.
+      # @param [Unit] other
+      # @return [Unit]
+      def *(other)
+        if other.is_a?(Unit::Compound)
+          Unit::Compound.new({ :dimension => dimension * other.dimension, 
+                                :units => other.units.merge(@units) })
+        elsif other.is_a?(Unit)
+          Unit::Compound.new({ :dimension => dimension * other.dimension, 
+                                :units => { other.dimension => other}.merge(@units) })
+        else
+          raise ArgumentError, "Cannot multiply #{self} with #{other}"
+        end
+      end
+
+      # Unit division.
+      # @param [Unit] other
+      # @return [Unit]
+      def /(other)
+        if other.is_a?(Unit::Compound)
+          Unit::Compound.new({ :dimension => dimension / other.dimension, 
+                                :units => other.units.merge(@units) })
+        elsif other.is_a?(Unit)
+          Unit::Compound.new({ :dimension => dimension / other.dimension, 
+                                :units => { other.dimension => other}.merge(@units) })
+        else
+          raise ArgumentError, "Cannot multiply #{self} with #{other}"
+        end
+      end
+
+      # Convert a portion of this compound to another unit.
+      # This one is tricky, because a lot of things can be happening.
+      # It's valid to convert m^2 to ft^2 and to feet (ft^2), but not 
+      # really valid to convert to ft^3.
+      # @param [Symbol Unit] to
+      # @return [Unit]
+      def convert(to)
+        to = Unit.for(to) if Unit.for(to)
+        if to.is_a?(String)
+          unit = self.class.from_string_form(to)
+          Unit.add_alias(unit, to)
+          unit
+        elsif to.is_a?(Compound)
+          if to.dimension == @dimension
+            to
+          else
+            raise ArgumentError, "Cannot convert #{self} to #{to}"
+          end
+        elsif to.is_a?(Unit) # basic unit, which can only mean converting a compoent for our compound
+          Unit::Compound.new({ :dimension => @dimension,
+                               :units => @units.merge({to.dimension => to}) })
+        else
+          raise ArgumentError, "Cannot convert #{self} to #{to}"
+        end
+      end
+
+      # Parse a string representation of a unit, such as foot^2/time^2, and return
+      # a compound object representing it.
+      def self.from_string_form(to)
+        units = {}
+        dimension_string = to
+        to.split(/(\^|\/|\*)/).each do | name |
+          next if name =~ /(\^|\/|\*)/ || name =~ /^\d$/
+          unit = Unit.for(name) || Unit.for(name.to_sym)
+          dimension_string.gsub!(name,unit.dimension.name.to_s)
+          units[unit.dimension] = unit
+        end
+        dimension = Dimension::Compound.for(Dimension::Compound.parse_string_form(dimension_string))
+        Unit::Compound.new({ :dimension => dimension, :units => units })
+      end
+      
+
+      attr_reader :units
       @units = {}
       # A new compound unit.  There are two modes of operation.  One provides a way to add units with
-      # a DSL.  The other provides an options hash a little better for programming.
+      # a DSL.  The other provides an options hash a little better for programming.  The last provides
+      # a way to create a unit for a given dimension--useful for reference units.
       #
       # @overload initialize(name, dimension, value, *aliases)
       #   @param [Symbol] name
@@ -191,11 +292,11 @@ class Quantity
       def initialize(name, dimension = nil, value = nil, *aliases)
         if name.is_a?(Hash)
           opts = name
-          @name = opts.delete(:name)
           @units = opts.delete(:units)
           @dimension = opts.delete(:dimension)
           @aliases = []
           calculate_value
+          @name = opts.delete(:name) || string_form
         elsif name.is_a?(Dimension)
           @dimension = name
           units = []
@@ -208,7 +309,7 @@ class Quantity
         else
           @name = name
           @dimension = Dimension.for(dimension)
-          @reference = @dimension.reference
+          #@reference = @dimension.reference
           @value = value
           @aliases = aliases
         end

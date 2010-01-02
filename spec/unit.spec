@@ -73,7 +73,10 @@ describe Quantity::Unit do
     foot = Quantity::Unit.for(:foot)
     sqft = foot * foot
     sqft.name.should == 'foot^2'
-    sqft.reference.should == 'millimeter^2'
+    sqft.dimension.reference.should equal(Quantity::Unit.for('millimeter^2'))
+    cubeft = sqft * foot
+    cubeft.name.should == 'foot^3'
+    cubeft.dimension.reference.should equal(Quantity::Unit.for('millimeter^3'))
   end
 
   it "should divide units" do
@@ -81,20 +84,21 @@ describe Quantity::Unit do
     second = Quantity::Unit.for(:second)
     m_s = meter / second
     m_s.name.should == 'meter/second'
-    m_s.reference.should == 'millimeter/millisecond'
+    m_s.dimension.reference.name.should == 'millimeter/millisecond'
   end
 
   it "should convert complex units" do
     foot = Quantity::Unit.for(:foot)
     sqft = foot * foot
     sqmt = sqft.convert(:meter)
-    sqmt.reference.should == 'millimeter^2'
+    sqmt.dimension.reference.name.should == 'millimeter^2'
     sqmt.name.should == 'meter^2'
     gram = Quantity::Unit.for(:gram)
     time = Quantity::Unit.for(:second)
     foot_grams_of_force = gram * foot / (time**2)
-    foot_grams_of_force.convert(:meter).name.should == 'gram*meter/second^2'
-    foot_grams_of_force.convert(:meter).reference.should == 'milligram*millimeter/millisecond^2'
+    foot_grams_of_force.convert(:meter).name.should == 'meter*gram/second^2'
+    foot_grams_of_force.convert(:meter).dimension.reference.string_form.should == 'millimeter*milligram/millisecond^2'
+    foot_grams_of_force.convert('feet*picograms/nanoseconds^2').dimension.reference.string_form.should == 'millimeter*milligram/millisecond^2'
   end
 
 

@@ -81,6 +81,9 @@ class Quantity
         #@value = @unit.convert_proc(@unit).call(@reference_value)
       when Numeric
         @unit = Unit.for(unit)
+        if @unit.nil?
+          @unit = Unit::Compound.from_string_form(unit)
+        end
         @value = value
         @reference_value = value * @unit.value 
     end
@@ -182,8 +185,21 @@ class Quantity
   def *(other)
     if (other.is_a?(Numeric))
       Quantity.new(@value * other, @unit)
-    elsif(other.is_a?(Quantity) && @unit.can_multiply?(other.unit))
+    elsif(other.is_a?(Quantity))
       Quantity.new({:unit => other.unit * @unit, :reference_value => @reference_value * other.reference_value})
+    else
+      raise ArgumentError, "Cannot multiply #{other} with #{self}"
+    end
+  end
+
+  # Division
+  # @param [Numeric, Quantity]
+  # @return [Quantity]
+  def /(other)
+    if (other.is_a?(Numeric))
+      Quantity.new(@value / other, @unit)
+    elsif(other.is_a?(Quantity))
+      Quantity.new({:unit => @unit / other.unit, :reference_value => @reference_value / other.reference_value})
     else
       raise ArgumentError, "Cannot multiply #{other} with #{self}"
     end
@@ -308,11 +324,7 @@ class Quantity
   # for variable units.
   # @param [Unit Symbol]
   def convert(to)
-    unless @unit.can_convert_to?(to)
-      raise ArgumentError,"Cannot convert #{@unit.measures} to #{to}" 
-    else
-      Quantity.new({:unit => @unit.convert(to), :reference_value => @reference_value})
-    end  
+    Quantity.new({:unit => @unit.convert(to), :reference_value => @reference_value})
   end
 
   #

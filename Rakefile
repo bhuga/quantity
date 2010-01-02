@@ -9,13 +9,13 @@ require 'yard'
 
 desc "Run specs"
 Spec::Rake::SpecTask.new('spec') do |t|
-  t.spec_files = FileList['spec/unit.spec','spec/quantity.spec','spec/dimension.spec']
+  t.spec_files = FileList['spec/unit.spec','spec/dimension.spec','spec/quantity.spec']
   t.spec_opts = ["-cfn"]
 end
 
 desc "specs with backtrace"
 Spec::Rake::SpecTask.new('tracespec') do |t|
-  t.spec_files = FileList['spec/unit.spec','spec/quantity.spec','spec/dimension.spec']
+  t.spec_files = FileList['spec/unit.spec','spec/dimension.spec','spec/quantity.spec']
   t.spec_opts = ["-bcfn"]
 end
 
