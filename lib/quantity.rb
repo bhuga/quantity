@@ -126,7 +126,7 @@ class Quantity
     elsif defined? Rational &&  defined? @value.gcd && defined? other.gcd
       [Quantity.new(Rational(other), @unit), self] 
     else
-      [Quantity.new(other.to_f, @unit),self]
+      [Quantity.new(other.to_f, @unit),Quantity.new(@value.to_f, @unit)]
     end
   end
 

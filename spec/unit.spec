@@ -42,6 +42,13 @@ describe Quantity::Unit do
     Quantity::Unit.for(:mile).should equal(Quantity::Unit.for(:miles))
   end
 
+  it "should load the derived units" do
+    require 'quantity/systems/derived'
+    Quantity::Unit.for(:liter).name.should == :liter
+    Quantity::Unit.for(:liter).dimension.string_form.should == 'length^3'
+    Quantity::Unit.for(:liter).dimension.name.should == :volume
+  end
+
   it "should support complex units" do
     foot = Quantity::Unit.for(:foot)
     area = foot.dimension**2

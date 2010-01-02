@@ -105,6 +105,7 @@ class Quantity
     # @return [Unit]
     def convert_proc(to)
       to = Unit.for(to)
+      raise ArgumentError, "Unable to find unit #{to}" unless to
       unless (to.dimension == self.dimension)
         raise ArgumentError, "Cannot convert #{self.dimension} to #{to.dimension}"
       end

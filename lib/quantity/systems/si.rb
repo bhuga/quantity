@@ -22,7 +22,8 @@ require 'quantity/dimension/base'
 # @see http://physics.nist.gov/cuu/Units/units.html
 # @see http://physics.nist.gov/cuu/Units/current.html
 # @see http://physics.nist.gov/cuu/Units/prefixes.html
-class Quantity::Unit
+class Quantity
+  class Unit
   prefixes = {}
   units = {}
   aliases = {}
@@ -86,14 +87,16 @@ class Quantity::Unit
   add_alias :milligram, :mg
   add_alias :megagram, :tonne, :tonnes
 
-#  Quantity::Unit::Volume.class_eval do
-#    prefixes.each do | prefix, value |
-#      add_unit "#{prefix}liter".to_sym, value * 1000, "#{prefix}liters".to_sym
-#      (aliases['liter']).each do | unit_alias |
-#        add_alias "#{prefix}liter".to_sym, "#{prefix + unit_alias}".to_sym
-#      end
-#    end
-#    add_alias :liter, :l
-#  end
 
+  #l = Unit.for(:length)
+  Quantity::Dimension::Compound.name_compound self.for(:meter).dimension**3, :volume
+  prefixes.each do | prefix, value |
+    add_unit :volume, "#{prefix}liter".to_sym, value * 1000, "#{prefix}liters".to_sym
+    (aliases['liter']).each do | unit_alias |
+      add_alias "#{prefix}liter".to_sym, "#{prefix + unit_alias}".to_sym
+    end
+  end
+  add_alias :liter, :l
+
+  end
 end
