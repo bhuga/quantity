@@ -8,15 +8,17 @@ class Quantity
       # @return [[Unit, Numeric]]
       # @private
       def parse_unit(text)
-        (num_unit,junk,power) = text.split(/( |\^)/)
-          unit_power = case power
+        (unit_name,junk,power) = text.split(/( |\^)/)
+        unit_power = case power
             when "squared"
               2
             when "cubed"
               3
             else power.to_i
           end
-          unit = Unit.for(num_unit.to_sym)
+          unit_power = 1 unless unit_power > 0
+          puts "parsing #{text} while creating a derived class got p #{unit_power}"
+          unit = Unit.for(unit_name.to_sym)
           [unit, unit_power]
       end
 
@@ -38,20 +40,35 @@ class Quantity
           # @return [Unit]
           def initialize(new_name, value = nil)
             if value.nil?
-              (numerator,denominator) = new_name.split(" per ")
+              (numerator,denominator) = new_name.split("/")
+              puts "got n #{numerator} d #{denominator}"
               (@num_unit,@num_power) = parse_unit(numerator)
               (@den_unit,@den_power) = parse_unit(denominator) if denominator
-              reference_unit_name = "#{@num_unit.reference_unit.name}^#{@num_power}"
-              @reference_unit = reference_unit_name == new_name ? self : Unit.for(reference_unit_name)
               @value = (@num_unit.value)**@num_power
+              @value /= (@den_unit.value)**@den_power if @den_unit
               puts "parsed out a new, one-argument der unit, #{new_name}"
             else
               @name = new_name
+              (numerator,denominator) = self.class.reference_unit.name.split("/")
+              (@num_unit,@num_power) = parse_unit(numerator)
+              (@den_unit,@den_power) = parse_unit(denominator) if denominator
               @value = value
-              (@num_unit,@num_power) = parse_unit(self.class.reference_unit.name)
               puts "parsed out a new, two-argument der unit, #{new_name}"
             end
-            # TODO: check for a hard class that matches this signature
+            if (@num_power != 1)
+              reference_unit_name = "#{@num_unit.reference_unit.name}^#{@num_power}"
+              @num_reference_unit = reference_unit_name == new_name ? self : Unit.for(reference_unit_name)
+            else
+              @num_reference_unit = @num_unit.reference_unit
+            end
+            if (@den_unit)
+              if (@den_power != 1)
+                reference_unit_name = "#{@den_unit.reference_unit.name}^#{@den_power}"
+                @den_reference_unit = reference_unit_name == new_name ? self : Unit.for(reference_unit_name)
+              else
+                @den_reference_unit = @den_unit.reference_unit
+              end
+            end
             puts "made a new derived class #{measures}, val #{@value} numu #{@num_unit.name} p #{@num_power}"
           end
     
@@ -161,10 +178,23 @@ class Quantity
             # that is a class-level instance variable.  so an extending *Class*'s ref unit is this.
             @reference_unit = unit
             @degree = unit.num_power
-            add_alias(unit, source)
+            add_alias(unit, *source)
           end
     
-    
+          # @param [Symbol] name
+          # @param [Numeric] value
+          # @param [Array] *aliases
+          def self.add_unit(name, value, *aliases)
+            puts "adding new derived unit, #{name}"
+            unit = self.new(name, value)
+            add_alias(unit, name, *aliases)
+          end
+          
+          # Sugar for self.class.reference_unit
+          # @return [Unit]
+          #def reference_unit
+          #  self.class.reference_unit
+          #end
         end #class_eval
       end
 

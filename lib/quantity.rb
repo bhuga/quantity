@@ -207,6 +207,22 @@ class Quantity
     end
   end
 
+  # Square the units of this quantity
+  # @example
+  #     4.meters.squared == Quantity.new(4.'m^2')
+  # @return [Quantity]
+  def squared
+    Quantity.new(@value, @unit * @unit)
+  end
+
+  # Cube the units of this quantity
+  # @example
+  #     4.meters.cubed == Quantity.new(4.'m^3')
+  # @return [Quantity]
+  def cubed
+    Quantity.new(@value, @unit * @unit * @unit)
+  end
+
   # Mod
   # @return [Quantity]
   def %(other)

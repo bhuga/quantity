@@ -54,7 +54,7 @@ module SI
   units['candela']  = Quantity::Unit::Luminosity
   units['ampere']   = Quantity::Unit::Current
   units['mole']     = Quantity::Unit::Substance
-  units['liter']    = Quantity::Unit::Volume
+  # liter is a special cased, handled separately below
 
   aliases['ampere'] = ['amp', 'amps', 'A']
   aliases['liter'] = ['litre', 'litres']
@@ -77,6 +77,7 @@ module SI
 
   class Quantity::Unit::Length 
     add_alias :kilometer, :km
+    add_alias :centimeter, :cm
     add_alias :meter, :m
     add_alias :nanometer, :nm
     add_unit :angstrom, 10 ** -7, :angstroms
@@ -89,7 +90,13 @@ module SI
     add_alias :megagram, :tonne, :tonnes
   end
 
-  class Quantity::Unit::Volume
+  Quantity::Unit::Volume.class_eval do
+    prefixes.each do | prefix, value |
+      add_unit "#{prefix}liter".to_sym, value * 1000, "#{prefix}liters".to_sym
+      (aliases['liter']).each do | unit_alias |
+        add_alias "#{prefix}liter".to_sym, "#{prefix + unit_alias}".to_sym
+      end
+    end
     add_alias :liter, :l
   end
 

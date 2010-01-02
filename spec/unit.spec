@@ -51,11 +51,19 @@ describe Quantity::Unit do
     lambda {(Quantity::Unit.for(:foot) * Quantity::Unit.for(:meter))}.should raise_error ArgumentError
   end
 
+  it "should divide units" do
+    Quantity::Unit.for(:meter) / Quantity::Unit.for(:second) == Quantity::Unit.for('meter/second')
+    Quantity::Unit.for('m^2') / Quantity::Unit.for(:second) == Quantity::Unit.for('meter^2/second')
+    Quantity::Unit.for(:meter) / Quantity::Unit.for('second^2') == Quantity::Unit.for('meter/second^2')
+    Quantity::Unit.for('m^2') / Quantity::Unit.for(:m) == Quantity::Unit.for(:meter)
+  end
+
   it "should allow a user to reify derived classes" do
     # cthulu will warp your mind in 5 dimensions!
     class Cthulu < Quantity::Unit::Derived
-      derived_from 'millimeter^5'
+      derived_from 'millimeter^5', :cthuluunit
       add_unit :ohgod, 5, :ohgods
+      add_unit :terror, 10, :terrors
     end
     ohgod = Quantity::Unit.for(:ohgod)
     ohgod.name.should == :ohgod
@@ -63,7 +71,12 @@ describe Quantity::Unit do
     ohgod.num_power.should == 5
     # these aren't Unit specs really but its easier to have them here
     1.ohgod.convert('mm^5').should == (Quantity.new(5,'mm^5'))
+    1.terror.should == 2.ohgod
+    1.ohgod.convert('mm^5').should == (Quantity.new(5,'mm^5'))
+    1.ohgod.should == 5.cthuluunit
+    1.ohgod.convert('mm^5').should == 5.cthuluunit
     1.ohgod.should == Quantity.new(5,'mm^5')
+    625.ohgod.should == 5.mm**5
     Quantity.new(5,'mm^5').should == 1.ohgod
     1.ohgod.to_s.should == "1 ohgod"
     (Quantity.new(5,'mm^5')).should == 1.ohgod

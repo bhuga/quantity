@@ -122,10 +122,13 @@ describe Quantity do
   end
 
   it "should convert derived classes to hard classes" do
-    (1.centimeter * 1.centimeter * 1.centimeter).should == 1.cc
-    (1.centimeter * 1.centimeter * 1.centimer).measures.should == :volume
-    (1.centimeter * 1.centimeter).measures.should == :area
-    (30.meters / 1.second).measures.should == :speed
+    (1.centimeter * 1.centimeter * 1.centimeter).should == 0.1.centiliter
+    (1.centimeter * 1.centimeter * 1.centimeter).should == 1.centimeter.cubed
+    (1.mm * 1.mm * 1.mm).should == 1.ml
+    0.1.centiliter.should == (1.cm * 1.cm * 1.cm)
+    (1.centimeter * 1.centimeter * 1.centimeter).measures.should == 'length^3'
+    (1.centimeter * 1.centimeter).measures.should == 'length^2'
+    (30.meters / 1.second).measures.should == 'length/time'
   end
 
   it "should reduce derived units" do

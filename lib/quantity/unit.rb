@@ -66,7 +66,18 @@ class Quantity
     def self.is_unit?(symbol)
       @@units_hash.has_key?(symbol)
     end
-    
+   
+    # A list of all known units and their aliases
+    # Units are returned as 2-tuples, [name unit]
+    # @return [[[Symbol String, Unit]]]
+    def self.all_units
+      ret = []
+      @@units_hash.each do | key, value |
+        ret << [key, value]
+      end
+      ret.sort { | a, b | a.to_s <=> b.to_s }
+    end
+
     # Unit for a given symbol
     # @param [Unit Symbol String] Unit, name or alias of unit, or description of derived unit
     # @return [Unit]
@@ -207,6 +218,19 @@ class Quantity
             other * self
           else
             raise ArgumentError, "Cannot multiply #{self.name} with #{other.name}"
+          end
+        end
+
+        # Unit division
+        # @param [Unit] other
+        # @return [Unit]
+        def /(other)
+          if other.is_a?(Derived)
+            raise NotImplementedError
+          elsif other.is_a?(Unit)
+            Unit.for("#{@name}/#{other.name}")
+          else
+            raise ArgumentError, "Cannot divide #{self.name} by #{other.name}"
           end
         end
 
