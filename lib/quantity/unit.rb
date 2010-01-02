@@ -78,7 +78,7 @@ class Quantity
           when Unit
             unit
           when String
-            new_unit = Unit::Derived.new(unit)
+            new_unit = Unit::Derived::General.new(unit)
             new_unit.class.register_unit new_unit, unit
             new_unit
         end
@@ -86,7 +86,7 @@ class Quantity
     end
 
     # Adds some methods to children when they extend this class.
-    # @private
+    # Unit by itself does not do much.
     def self.inherited(child)
       child.class_eval do
         # All units for this measured type
@@ -201,10 +201,12 @@ class Quantity
         # @param [Unit] other
         # @return [Unit]
         def *(other)
-          unless can_multiply?(other)
-            raise ArgumentError, "Cannot multiply #{self.name} with #{other.name}"
-          else
+          if self == other
             Unit.for("#{@name}^2")
+          elsif other.can_multiply?(self)
+            other * self
+          else
+            raise ArgumentError, "Cannot multiply #{self.name} with #{other.name}"
           end
         end
 
@@ -212,7 +214,8 @@ class Quantity
         # @param [Any] other
         # @return [Boolean]
         def can_multiply?(other, other_checked = false)
-          self == other || other.is_a?(Unit) && !other_checked && other.can_multiply?(self, true)
+          other = Unit.for(other)
+          (self == other) || (other.is_a?(Unit) && !other_checked && other.can_multiply?(self, true))
         end
 
       end
@@ -236,10 +239,18 @@ class Quantity
       name.to_sym
     end
 
-    # @param [Numeric] return a string representing this numeric as this unit
+    # A string representing the given numeric as this unit
+    # @param [Numeric] return a string representing the given numeric as this unit
     # @return [String]
     def s_for(s)
       "#{s} #{name}"
     end
+
+    # A string representation of this unit
+    # @return [String]
+    def to_s
+      name
+    end
+    alias_method :inspect, :to_s
   end
 end

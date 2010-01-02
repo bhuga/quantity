@@ -118,6 +118,7 @@ describe Quantity do
 
   it "should convert derived units" do
     Quantity.new(2,'m^2').to_feet.to_f.should be_close 21.5278208, 10**-5
+    Quantity.new(2,'m^2').convert('foot^2').to_f.should be_close 21.5278208, 10**-5
   end
 
   it "should convert derived classes to hard classes" do

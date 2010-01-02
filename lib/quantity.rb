@@ -311,6 +311,12 @@ class Quantity
   # @raises ArgumentError
   # @return [Quantity]
 
+  # Developer-friendly string representation
+  # @return [String]
+  def inspect
+    to_s
+  end
+
     # this creates the conversion methods of .to_* and .in_*
     # @private
     def method_missing(method, *args, &block)

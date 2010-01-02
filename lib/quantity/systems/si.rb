@@ -91,7 +91,6 @@ module SI
 
   class Quantity::Unit::Volume
     add_alias :liter, :l
-    add_alias :milliliter, :cc, :ccs
   end
 
 end

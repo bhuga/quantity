@@ -33,10 +33,48 @@ describe Quantity::Unit do
     Quantity::Unit.for('mm^2').convert_proc('m^2').call(4000000).to_i.should == 4
   end
 
+  it "should know what it can multiply" do
+    Quantity::Unit.for('m^2').can_multiply?(Quantity::Unit.for(:meter)).should == true
+    Quantity::Unit.for('m^2').can_multiply?(:meter).should == true
+    Quantity::Unit.for(:meter).can_multiply?(Quantity::Unit.for('m^2')).should == true
+    Quantity::Unit.for(:meter).can_multiply?('m^2').should == true
+    Quantity::Unit.for('m^2').can_multiply?(Quantity::Unit.for(:seconds)).should == false
+    Quantity::Unit.for(:seconds).can_multiply?(Quantity::Unit.for('m^2')).should == false
+    Quantity::Unit.for(:seconds).can_multiply?('m^2').should == false
+  end
+
   it "should multiply units" do
     (Quantity::Unit.for(:meter) * Quantity::Unit.for(:meter)).should == Quantity::Unit.for('m^2')
     (Quantity::Unit.for('m^2') * Quantity::Unit.for(:meter)).should == Quantity::Unit.for('m^3')
+    (Quantity::Unit.for(:meter) * Quantity::Unit.for('m^2')).should == Quantity::Unit.for('m^3')
+    (Quantity::Unit.for('m^2') * Quantity::Unit.for('m^2')).should == Quantity::Unit.for('m^4')
     lambda {(Quantity::Unit.for(:foot) * Quantity::Unit.for(:meter))}.should raise_error ArgumentError
   end
+
+  it "should allow a user to reify derived classes" do
+    # cthulu will warp your mind in 5 dimensions!
+    class Cthulu < Quantity::Unit::Derived
+      derived_from 'millimeter^5'
+      add_unit :ohgod, 5, :ohgods
+    end
+    ohgod = Quantity::Unit.for(:ohgod)
+    ohgod.name.should == :ohgod
+    ohgod.num_unit.should == Quantity::Unit.for(:mm)
+    ohgod.num_power.should == 5
+    # these aren't Unit specs really but its easier to have them here
+    1.ohgod.convert('mm^5').should == (Quantity.new(5,'mm^5'))
+    1.ohgod.should == Quantity.new(5,'mm^5')
+    Quantity.new(5,'mm^5').should == 1.ohgod
+    1.ohgod.to_s.should == "1 ohgod"
+    (Quantity.new(5,'mm^5')).should == 1.ohgod
+  end
+
+  it "should allow general derived classes" do
+    Quantity::Unit.for('m^4').should == Quantity::Unit.for('m^4')
+    Quantity::Unit.for('m^4').to_s.should == "meter^4"
+    Quantity::Unit.for('m^4').num_power.should == 4
+    Quantity::Unit.for('m^4').num_unit.should == Quantity::Unit.for(:meter)
+  end
+
 end
 

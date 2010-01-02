@@ -3,13 +3,11 @@ class Quantity
     # A derived unit, which can be anything generic, like 'meters squared' or 'feet per second'.
     class Derived < Unit
 
-      attr_reader :reference_unit
-      @num_power = nil
-      @den_power = nil
-      @num_class = nil
-      @den_class = nil
-      def initialize(new_name)
-        parse_unit = lambda do | text |
+      # Parse a textual unit name, like m^3, into a unit and a power
+      # @param [String] unit description
+      # @return [[Unit, Numeric]]
+      # @private
+      def parse_unit(text)
         (num_unit,junk,power) = text.split(/( |\^)/)
           unit_power = case power
             when "squared"
@@ -20,14 +18,39 @@ class Quantity
           end
           unit = Unit.for(num_unit.to_sym)
           [unit, unit_power]
-        end
+      end
 
-        (numerator,denominator) = new_name.split(" per ")
-        (@num_unit,@num_power) = parse_unit.call(numerator)
-        (@den_unit,@den_power) = parse_unit.call(denominator) if denominator
-        reference_unit_name = "#{@num_unit.reference_unit.name}^#{@num_power}"
-        @reference_unit = reference_unit_name == new_name ? self : Unit.for(reference_unit_name)
-        @value = (@num_unit.value)**@num_power
+      def self.inherited(child)
+        child.class_eval do
+
+      attr_reader :reference_unit, :num_unit, :num_power
+      @num_power = nil
+      @den_power = nil
+      @num_class = nil
+      @den_class = nil
+
+      # Initialize a new derived class.
+      # With one argument, it will be assumed to be a description like 'foot^2' and dealt 
+      # with accordingly.  With two, it will assumed to be a name and a value.
+      # The two-argument version is meaningless for General instances.
+      # @param [String] name
+      # @param [Numeric nil] value
+      # @return [Unit]
+      def initialize(new_name, value = nil)
+        if value.nil?
+          (numerator,denominator) = new_name.split(" per ")
+          (@num_unit,@num_power) = parse_unit(numerator)
+          (@den_unit,@den_power) = parse_unit(denominator) if denominator
+          reference_unit_name = "#{@num_unit.reference_unit.name}^#{@num_power}"
+          @reference_unit = reference_unit_name == new_name ? self : Unit.for(reference_unit_name)
+          @value = (@num_unit.value)**@num_power
+          puts "parsed out a new, one-argument der unit, #{new_name}"
+        else
+          @name = new_name
+          @value = value
+          (@num_unit,@num_power) = parse_unit(self.class.reference_unit.name)
+          puts "parsed out a new, two-argument der unit, #{new_name}"
+        end
         # TODO: check for a hard class that matches this signature
         puts "made a new derived class #{measures}, val #{@value} numu #{@num_unit.name} p #{@num_power}"
       end
@@ -45,23 +68,29 @@ class Quantity
       # Name of this unit, such as meters^2
       # @return [String]
       def name
-        name = "#{@num_unit.name}"
-        name += "^#{@num_power}" if @num_power
-        name += "/ #{@den_unit.name}" if @den_unit
-        name += "^#{@den_unit}" if @den_power
-        name 
+        if @name
+          @name
+        else
+          name = "#{@num_unit.name}"
+          name += "^#{@num_power}" if @num_power
+          name += "/ #{@den_unit.name}" if @den_unit
+          name += "^#{@den_unit}" if @den_power
+          name 
+        end
       end
 
-      # Provide a lambda to do a conversion from one unit to another
+      # Provide a lambda to do a conversion from this unit to another
       # @param to [Unit Symbol]
       # @return [Proc]
       def convert_proc(to)
-        to_unit = Unit.for(to)
-        to_value = to_unit.value.to_f
-        # symbol equals first-order unit.
-        unless (to.is_a?(Derived))
-          to_value = to_value**@num_power 
-        end
+        to_unit = convert(to)
+        to_value = to_unit.value
+        # Derived units are at the correct power and have their values set accordingly,
+        # otherwise we are doing something like m^2 => ft, so we need to be using the value
+        # for m^2 => ft^2
+        #unless (to.is_a?(Derived))
+        #  to_value = to_value**@num_power 
+        #end
         puts "got cv #{value} with me #{measures}, to #{to_unit.measures} and num #{@num_unit.measures}"
         if (defined? Rational) && defined?(value.gcd)
           lambda do | from |
@@ -93,8 +122,12 @@ class Quantity
       # @return [Unit]
       def convert(to)
         case Unit.for(to).measures
+          # when the target measures a component of us, i.e. m^2 -> feet
           when @num_unit.measures
             Unit.for("#{Unit.for(to).name}^#{@num_power}")
+          # when the target *is* us, i.e. m^2 -> ft^2 are both length^2
+          when measures
+            Unit.for(to)
         end
       end
 
@@ -105,7 +138,7 @@ class Quantity
         unless can_multiply?(other)
           raise ArgumentError, "Cannot multiply #{self.name} with #{other.name}"
         else
-          if defined? other.num_unit
+          if other.is_a?(Derived)
             Unit.for("#{@num_unit.name}^#{@num_power + other.num_power}")
           else
             Unit.for("#{@num_unit.name}^#{@num_power + 1}")
@@ -117,17 +150,28 @@ class Quantity
       # @param [Any] other
       # @return [Boolean]
       def can_multiply?(other, other_checked = false)
-        other.is_a?(Unit) && @num_unit.name == other.name || @num_unit.name == other.num_unit.name
+        other = Unit.for(other)
+        other.is_a?(Unit) && ((@num_unit.name == other.name) || (other.is_a?(Derived) && @num_unit.name == other.num_unit.name))
       end
 
       # Associate this derived unit with the associated base units, such as length^3
       # @param [String] source
-      def self.derived_from(source)
-        puts "class: #{self}, adding #{source}"
-        unit = self.new(source)
+      def self.derived_from(*source)
+        unit = General.new(source.shift)
+        # that is a class-level instance variable.  so an extending *Class*'s ref unit is this.
+        @reference_unit = unit
+        @degree = unit.num_power
         add_alias(unit, source)
       end
 
+
+        end #class_eval
+      end
+
+    # General is a derived unit with no specific class backing it up.
+    # While Volume is length^3, length^4 would be a General.
+    class General < Derived
+    end
     end
   end
 end
