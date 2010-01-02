@@ -2,6 +2,9 @@ require 'quantity/version'
 require 'quantity/dimension'
 require 'quantity/dimension/base'
 require 'quantity/unit'
+require 'quantity/systems/si'
+require 'quantity/systems/us'
+
 #
 # A quantity of something.  Quantities are immutable; conversions and other operations return
 # a new quantity.
@@ -74,7 +77,7 @@ class Quantity
       when Hash
         @unit = Unit.for(value[:unit])
         @reference_value = value[:reference_value] || (value[:value] * @unit.value)
-        @value = @unit.dimension.reference_unit.convert_proc(@unit).call(@reference_value)
+        @value = @unit.dimension.reference.convert_proc(@unit).call(@reference_value)
         #@value = @unit.convert_proc(@unit).call(@reference_value)
       when Numeric
         @unit = Unit.for(unit)
@@ -131,14 +134,10 @@ class Quantity
   def +(other)
     if (other.is_a?(Numeric))
       Quantity.new(@value + other, @unit)
-    elsif(other.is_a?(Quantity))
-      if (@unit.measures == other.unit.measures)
-        Quantity.new({:unit => @unit,:reference_value => @reference_value + other.reference_value})
-      else
-        raise ArgumentError,"Cannot add #{@unit.measures} to #{other.unit.measures}"
-      end
+    elsif(other.is_a?(Quantity) && @unit.dimension == other.unit.dimension)
+      Quantity.new({:unit => @unit,:reference_value => @reference_value + other.reference_value})
     else
-      raise ArgumentError,"Cannot add #{other} to #{self}"
+      raise ArgumentError,"Cannot add #{self} to #{other}"
     end
   end
 
@@ -149,12 +148,8 @@ class Quantity
   def -(other)
     if (other.is_a?(Numeric))
       Quantity.new(@value - other, @unit)
-    elsif(other.is_a?(Quantity))
-      if (@unit.measures == other.unit.measures)
-        Quantity.new({:unit => @unit,:reference_value => @reference_value - other.reference_value})
-      else
-        raise ArgumentError,"Cannot subtract #{@unit.measures} from #{other.measures}"
-      end
+    elsif(other.is_a?(Quantity) && @unit.dimension == other.unit.dimension)
+      Quantity.new({:unit => @unit,:reference_value => @reference_value - other.reference_value})
     else
       raise ArgumentError, "Cannot subtract #{other} from #{self}"
     end
