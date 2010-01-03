@@ -1,6 +1,8 @@
 $:.unshift(File.expand_path(File.join(File.dirname(__FILE__), 'lib')))
 
 require 'quantity'
+require 'quantity/systems/si'
+require 'quantity/systems/us'
 
 describe Quantity::Dimension do
   
