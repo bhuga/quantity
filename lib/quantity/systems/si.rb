@@ -24,7 +24,7 @@ require 'quantity/dimension/base'
 # @see http://physics.nist.gov/cuu/Units/prefixes.html
 class Quantity
   class Unit
-    module SI
+
   prefixes = {}
   units = {}
   aliases = {}
@@ -68,7 +68,7 @@ class Quantity
 
   units.each do | unit, dimension |
     prefixes.each do | prefix, value |
-      add_unit dimension, "#{prefix + unit}".to_sym, value, "#{prefix + unit}s".to_sym
+      add_unit "#{prefix + unit}".to_sym, dimension, value, "#{prefix + unit}s".to_sym
       if aliases[unit]
         aliases[unit].each do | unit_alias |
           add_alias "#{prefix + unit}".to_sym, "#{prefix + unit_alias}".to_sym
@@ -81,7 +81,7 @@ class Quantity
   add_alias :centimeter, :cm
   add_alias :meter, :m
   add_alias :nanometer, :nm
-  add_unit :length, :angstrom, 10 ** -7, :angstroms
+  add_unit :angstrom, :length, 10 ** -7, :angstroms
 
   add_alias :kilogram, :kg
   add_alias :gram, :g
@@ -89,16 +89,13 @@ class Quantity
   add_alias :megagram, :tonne, :tonnes
 
 
-  #l = Unit.for(:length)
-  Quantity::Dimension::Compound.name_compound self.for(:meter).dimension**3, :volume
   prefixes.each do | prefix, value |
-    add_unit :volume, "#{prefix}liter".to_sym, value * 1000, "#{prefix}liters".to_sym
+    add_unit "#{prefix}liter".to_sym, :volume, value * 1000, "#{prefix}liters".to_sym
     (aliases['liter']).each do | unit_alias |
       add_alias "#{prefix}liter".to_sym, "#{prefix + unit_alias}".to_sym
     end
   end
   add_alias :liter, :l
 
-    end
   end
 end

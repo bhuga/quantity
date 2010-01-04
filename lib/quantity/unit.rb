@@ -58,7 +58,7 @@ class Quantity
     # @param [Numeric] value
     # @param [[String Symbol]] *aliases
     def self.add_unit(name,dimension,value,*names)
-      new_unit = Unit.new({ :name => name,:dimension => dimension,:value => value})
+      new_unit = Unit.new({ :name => name,:dimension => Quantity::Dimension.for(dimension),:value => value})
       names.each do | name |
         add_alias new_unit, name
       end
@@ -242,7 +242,7 @@ class Quantity
     def initialize(opts)
       @units = opts[:units]
       @dimension = opts[:dimension]
-      @value = @dimension.is_base? ? opts[:value] : calculate_value
+      @value = opts[:value] || calculate_value
       if @dimension.nil?
         raise ArgumentError, "Adding invalid unit with nil dimension (#{name} - #{dimension})"
       end

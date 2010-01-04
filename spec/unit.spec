@@ -43,10 +43,14 @@ describe Quantity::Unit do
     Quantity::Unit.add_unit :gram, @mass, 1000, :grams
     Quantity::Unit.add_unit :nanosecond, @time, 10**-6, :nanoseconds
     Quantity::Unit.add_unit :picogram, @mass, 10**-9, :picograms
+    Quantity::Unit.add_unit :mps, @accel, 10**12, :meterspersecond
     meters = Quantity::Unit.for :meter 
     meters.dimension.should == @length
     meters.name.should == :meter
     meters.value.should == 1000
+    mps = Quantity::Unit.for :mps
+    mps.name.should == :mps
+    mps.value.should == 10**12
   end
 
   it "should know its aliases" do
