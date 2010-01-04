@@ -43,7 +43,7 @@ describe Quantity::Dimension do
     length.name.should == :length
     area.to_s.should == "area"
     area.name.should == :area
-    area.class.should == Area
+    area.class.should == Quantity::Dimension::Area
     area.string_form.should == 'length^2'
     accel.class.should == Acceleration
     accel.to_s.should == "acceleration"
