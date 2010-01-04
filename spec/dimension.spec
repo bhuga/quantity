@@ -24,12 +24,17 @@ describe Quantity::Dimension do
     Acceleration.add_dimension :'length/time^2'
     Quantity::Dimension.add_dimension :mass
     Quantity::Dimension.add_dimension :time
-    Quantity::Dimension.add_dimension :'mass*length/time^2', :force
     
     length = Quantity::Dimension.for(:length)
     mass = Quantity::Dimension.for(:mass)
     area = Quantity::Dimension.for(:area)
     accel = Quantity::Dimension.for(:acceleration)
+    time = Quantity::Dimension.for(:time)
+
+    ml = Quantity::Dimension.add_dimension mass * length
+    t2 = Quantity::Dimension.add_dimension time**2
+    Quantity::Dimension.add_dimension ml / t2, :force
+    #Quantity::Dimension.add_dimension :'length*mass/time^2', :force
     force = Quantity::Dimension.for(:'length*mass/time^2')
     force2 = Quantity::Dimension.for(:'mass*length/time^2')
 
@@ -46,12 +51,12 @@ describe Quantity::Dimension do
     mass.to_s.should == "mass"
     mass.name.should == :mass
     mass.class.should == Quantity::Dimension
+    Quantity::Dimension.for(:width).should equal(length)
     force.name.should == :force # note normalized reordering
     force.to_s.should == "force" # note normalized reordering
     force.string_form.should == "length*mass/time^2" # note normalized reordering
     force.class.should == Quantity::Dimension
     force2.should equal(force)
-    Quantity::Dimension.for(:width).should equal(length)
   end
 
   it "should have a name" do

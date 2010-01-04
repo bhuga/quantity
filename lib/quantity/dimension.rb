@@ -24,7 +24,12 @@ class Quantity
     def self.for(to)
       case to
         when Dimension
-          @@dimensions[to.name]
+          if @@dimensions[to.name]
+            @@dimensions[to.name]
+          else
+            add_alias to, to.name
+            to
+          end
         when Symbol
           if @@dimensions.has_key?(to)
             @@dimensions[to]
@@ -45,9 +50,15 @@ class Quantity
     # @param [Symbol] name
     # @param [[Symbol String]] *aliases
     def self.add_dimension(name, *aliases)
-      dim = self.for(name) ? self.for(name) : self.new({ :name => aliases.first , :description => name})
-      self.add_alias(dim,name)
-      self.add_alias(dim,dim.string_form.to_sym,*aliases)
+      dim = nil
+      if name.is_a?(Dimension) 
+        name.name = aliases.first if aliases.first
+        dim = name
+      else
+        dim = self.for(name) || self.new({ :name => aliases.first , :description => name})
+        self.add_alias(dim,name)
+      end
+      self.add_alias(dim,*aliases)
       dim
     end
 
@@ -56,6 +67,8 @@ class Quantity
     # @param [[*names]]
     def self.add_alias(dimension, *names)
       names.each do |name|
+        #puts "adding dimension alias, #{name.inspect} for #{dimension.inspect}"
+        raise ArgumentError, "Invalid dimension alias: #{name}" unless (name.to_s =~ /^(\^|\/)/).nil?
         @@dimensions[name] = dimension
       end
     end
@@ -77,7 +90,9 @@ class Quantity
         "#{dimension.inspect}^#{power}"
       end
     end
-    attr_reader :numerators, :denominators, :name
+
+    attr_reader :numerators, :denominators
+    attr_accessor :name
     ### Instance-level methods/vars
 
     # A new dimension
@@ -88,10 +103,11 @@ class Quantity
         (@numerators,@denominators) = Dimension.parse_string_form(opts[:description])
       elsif (opts[:numerators])
         @numerators = opts[:numerators]
-        @denominators = opts[:denominators] || []
+        @denominators = opts[:denominators]
       else
         raise ArgumentError, "Invalid options for dimension constructors"
       end
+      raise ArgumentError, "Dimensions require a numerator" unless @numerators.first.dimension
       @name = (self.class == Dimension) ? (opts[:name] || string_form.to_sym) : self.class.name.downcase.to_sym
       Dimension.add_alias(self,@name)
       Dimension.add_alias(self,string_form.to_sym)
@@ -116,9 +132,9 @@ class Quantity
     # @result [Dimension::Compound] 
     def /(other)
       raise ArgumentError, "Cannot divide #{self} by #{other.class}" unless other.is_a?(Dimension)
-      reciprocal = Dimension.for([other.denominators,other.numerators])
-      reciprocal ||= Dimension.new({:numerators => other.denominators, :denominators => other.numerators})
-      self * reciprocal
+      (new_n, new_d) = Dimension.reduce(@numerators + other.denominators, @denominators + other.numerators)
+      existing = Dimension.for([new_n,new_d])
+      existing.nil? ? Dimension.new({:numerators => new_n, :denominators => new_d}) : existing
     end
 
     # Dimensional exponentiation
