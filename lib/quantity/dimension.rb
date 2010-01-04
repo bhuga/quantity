@@ -13,8 +13,6 @@ class Quantity
   # Such dimensions are called compound dimensions.
   #
   class Dimension
-    include Comparable
-
     ### Class-level methods/vars
     # all known dimensions
     @@dimensions = {}
@@ -24,21 +22,32 @@ class Quantity
     # @param [String Symbol Dimension]
     # @return [Dimension]
     def self.for(to)
-      to.is_a?(Dimension) ? to : @@dimensions[to]
+      case to
+        when Dimension
+          @@dimensions[to.name]
+        when Symbol
+          if @@dimensions.has_key?(to)
+            @@dimensions[to]
+          else
+            # it's possible we have a non-normalized form, such as mass*length 
+            # instead of length * mass
+            @@dimensions[string_form(parse_string_form(to)).to_sym]
+          end
+        when Array
+          @@dimensions[string_form(to).to_sym]
+        else
+          nil
+      end
     end
 
     # DSL component to add a new dimension.  Dimension name, reference unit,
     # and aliases.  This should be the only way that dimensions are added.
-    # @param [Symbol String] name
-    # @param [Unit Symbol] reference
+    # @param [Symbol] name
     # @param [[Symbol String]] *aliases
-    def self.add_dimension(name, reference, *aliases)
-      if self.for(name)
-        self.add_alias(self.for(name),*aliases)
-      else
-        dim = Base.new(name, reference, *aliases)
-      end
-      self.for(name)
+    def self.add_dimension(name, *aliases)
+      dim = self.for(name) ? self.for(name) : self.new({ :name => aliases.first , :description => name})
+      self.add_alias(dim,*aliases)
+      dim
     end
 
     # Register a dimension to the known list, with the given aliases
@@ -46,10 +55,7 @@ class Quantity
     # @param [[*names]]
     def self.add_alias(dimension, *names)
       names.each do |name|
-        # don't overwrite base references with compound versions
-        unless @@dimensions[name] && dimension.is_base? && dimension.is_a?(Compound)
-          @@dimensions[name] = dimension
-        end
+        @@dimensions[name] = dimension
       end
     end
 
@@ -59,189 +65,60 @@ class Quantity
       @@dimensions.values.uniq
     end
 
+    # Reset the known dimensions.  Generally only used for testing.
+    def self.__reset!
+      @@dimensions = {}
+    end
+
+    DimensionComponent = Struct.new(:dimension, :power)
+    DimensionComponent.class_eval do
+      def inspect
+        "#{dimension.inspect}^#{power}"
+      end
+    end
+    attr_reader :numerators, :denominators, :name
     ### Instance-level methods/vars
 
-    @units = {}
-    # Make note of a unit that has been added to measure in this dimension
-    # @param [Unit]
-    def register!(unit)
-      unit.names.each do |name|
-        @units[name] = unit
+    # A new dimension
+    # @param [Hash] options
+    # @return Dimension
+    def initialize(opts)
+      if (opts[:description])
+        (@numerators,@denominators) = Dimension.parse_string_form(opts[:description])
+      elsif (opts[:numerators])
+        @numerators = opts[:numerators]
+        @denominators = opts[:denominators] || []
+      else
+        raise ArgumentError, "Invalid options for dimension constructors"
       end
+      @name = (self.class == Dimension) ? (opts[:name] || string_form.to_sym) : self.class.name.downcase.to_sym
+      Dimension.add_alias(self,@name)
+      Dimension.add_alias(self,string_form.to_sym)
     end
 
-    # The name of a given dimension
-    @name = nil
-    attr_accessor :name
-
-    # The reference unit for this dimension
-    @reference = nil
-
-    # The reference unit for this dimension.  Fetches a unit from Unit
-    # if available and returns the identifier otherwise.
-    # @return [Symbol String Unit]
-    def reference
-      if !(@reference.is_a?(Unit))
-        @reference = Unit.for(@reference) unless Unit.for(@reference).nil?
-      end
-      @reference
-    end
-
-    # Is the given unit a unit on this dimension?
-    # @param [Unit Symbol]
-    # @return [Boolean]
-    def is_unit?(unit)
-      return @units.has_key?(unit) || @units.has_value?(unit)
-    end
-
-    # The full list of units on this measurement domain
-    # @return [Unit]
-    def units
-      @units.values.uniq
-    end
-  
     def to_s
-      "Dimension #{@name}"
+      @name.to_s
     end
 
-    class Base < Dimension
-
-      # Dimensional multiplication
-      # @param [Dimension] other
-      # @result [Dimension::Compound] 
-      def *(other)
-        Compound.for(self) * other
-      end
-
-      # Dimensional division
-      # @param [Dimension] other
-      # @result [Dimension::Compound] 
-      def /(other)
-        Compound.for(self) / other
-      end
-
-      # Dimensional Exponentiation
-      # @param [Numeric] other
-      # @result [Dimension::Compound] 
-      def **(other)
-        Compound.for(self)**other
-      end
-
-      # Whether or not this dimension is a base dimension
-      # @return true
-      def is_base?
-        true
-      end
-
-      # Spaceship operator for comparable.
-      # @param [Any] other
-      # @return [-1 0 1]
-      def <=>(other)
-        if other.is_a?(Dimension)
-          other.is_base? ? name.to_s <=> other.name.to_s : -1
-        else
-          nil
-        end
-      end
-
-      # A new base dimension
-      # @param [Symbol] name
-      # @return Dimension
-      def initialize(name, reference, *aliases)
-        @units = {}
-        @name = name
-        Dimension.add_alias(self, @name, *aliases)
-        @reference = Quantity::Unit.for(reference) || reference
-      end
-
-      def inspect
-        "Base Dimension #{@name} (#{object_id}).  #{@units.count} units."
-      end
-
+    # Dimensional multiplication
+    # @param [Dimension] other
+    # @result [Dimension::Compound] 
+    def *(other)
+      raise ArgumentError, "Cannot multiply #{self} and #{other.class}" unless other.is_a?(Dimension)
+      (new_n, new_d) = Dimension.reduce(@numerators + other.numerators, @denominators + other.denominators)
+      existing = Dimension.for([new_n,new_d])
+      existing.nil? ? Dimension.new({:numerators => new_n, :denominators => new_d}) : existing
     end
 
-    class Compound < Dimension
-
-      @@compounds = {}
-
-      # Name and save a derived, compound dimension
-      # @param [Compound] compound
-      # @return [Compound] the saved compound
-      def self.save_compound(compound)
-        if compound.nil? 
-          nil
-        else
-          @@compounds[compound.name] = compound
-          @@compounds[compound.string_form] = compound
-        end
-      end
-
-      def self.all_compounds
-        @@compounds
-      end
-
-      # Name a compound for future use.
-      # @example
-      #     Compound.name_compound length * length, :area
-      def self.name_compound(compound, name)
-        Compound.for(compound).name = name  
-      end
-
-      # A compound representation of the given dimension
-      # Given a Compound, returns the canonical version of that particular compound
-      # Given a Base, returns or creates the canonical version of that particular compound
-      # Given a String, returns or creates the canonical version of the compound
-      # that string describes.
-      # Given a string, creates a compound assuming they are arrays of DimensionComponents
-      # for the numerator and denominator, respectively
-      # @param [Dimension]
-      # @return [Compound]
-      def self.for(other)
-        case other
-          when Compound
-            @@compounds[other.string_form].nil? ? save_compound(other) : @@compounds[other.string_form]
-          when Base
-            compound = @@compounds[other.name]
-            if compound.nil?
-              compound = save_compound(self.new({ :dimension => other, :power => 1})) 
-                                                  #:name => other.name, :power => 1}))
-            end
-            compound.name = other.name
-            compound
-          when String
-            compound = @@compounds[other]
-            compound.nil? ? save_compound(self.new({ :description => other })) : compound
-          when Array
-            compound = self.new({:numerators => other.first, :denominators => other[1]})
-            old_compound = @@compounds[compound.string_form]
-            if old_compound.nil?
-              save_compound(compound)
-            else
-              compound = old_compound
-            end
-            compound
-          else
-            nil
-        end
-      end
-
-      # Dimensional multiplication
-      # @param [Dimension] other
-      # @result [Dimension::Compound] 
-      def *(other)
-        other = Compound.for(other)
-        raise ArgumentError, "Cannot multiply #{self} and #{other.class}" unless other.is_a?(Compound)
-        (new_n, new_d) = reduce(@numerators + other.numerators, @denominators + other.denominators)
-        Compound.for([new_n,new_d])
-      end
-
-      # Dimensional division
-      # @param [Dimension] other
-      # @result [Dimension::Compound] 
-      def /(other)
-        other = Compound.for(other)
-        self * Compound.for([other.denominators,other.numerators])
-      end
+    # Dimensional division
+    # @param [Dimension] other
+    # @result [Dimension::Compound] 
+    def /(other)
+      raise ArgumentError, "Cannot divide #{self} by #{other.class}" unless other.is_a?(Dimension)
+      reciprocal = Dimension.for([other.denominators,other.numerators])
+      reciprocal ||= Dimension.new({:numerators => other.denominators, :denominators => other.numerators})
+      self * reciprocal
+    end
 
       # Dimensional exponentiation
       # @param [Numeric] other
@@ -274,47 +151,15 @@ class Quantity
         end
       end
 
-      DimensionComponent = Struct.new(:dimension, :power)
-      DimensionComponent.class_eval do
-        def inspect
-          "#{dimension.inspect}^#{power}"
-        end
-      end
-      attr_reader :numerators, :denominators
-
-      def name
-        @name.nil? ? self.string_form : @name
-      end
-
       def name=(new_name)
         @name = new_name
         Dimension.add_alias Compound.for(self), new_name
       end
 
-      # A new base dimensions
-      # @param [Hash] options
-      # @return Dimension
-      def initialize(opts)
-        @units = {}
-        if (opts[:description])
-          (@numerators,@denominators) = Compound.parse_string_form(opts[:description])
-        elsif (opts[:numerators])
-          @numerators = opts[:numerators]
-          @denominators = opts[:denominators] || []
-        else
-          @numerators = []
-          @denominators = []
-          @numerators << DimensionComponent.new(opts[:dimension], opts[:power])
-        end
-        @name = opts[:name]
-        @reference = Quantity::Unit::Compound.reference_unit_for(self)
-        puts "inserting #{@name}" if @name.to_s == 'length'
-        Dimension.add_alias(self,@name) if @name
-      end
-
-      # Returns a new dimension (possibly base) that is this compound reduced to the minimum
-      # @return [Dimension]
-      def reduce(numerators,denominators)
+      # Returns numerators and denominators that represent the reduced form of the given
+      # numerators and denominators
+      # @return [[Array],[Array]]
+      def self.reduce(numerators,denominators)
         new_numerators = reduce_multiplied_units(numerators)
         new_denominators = reduce_multiplied_units(denominators)
 
@@ -336,31 +181,33 @@ class Quantity
       # Reduce an array of units to its most compact, sorted form
       # @param [[DimensionComponent]]
       # @return [[DimensionComponent]]
-      def reduce_multiplied_units(array)
+      def self.reduce_multiplied_units(array)
         new = {}
         array.each do | item |
           new[item.dimension] = DimensionComponent.new(item.dimension,0) unless new[item.dimension]
           new[item.dimension].power += item.power
         end
-        new.values.sort { |a,b| a.dimension.name.to_s <=> b.dimension.name.to_s }
+        new.values.sort { |a,b| a.dimension.to_s <=> b.dimension.to_s }
       end
 
       def inspect
-        "Compound Dimension #{@name} (#{object_id}).  Numerators: #{@numerators.inspect} Denominators: #{@denominators.inspect}"
+        "Dimension #{@name} (#{object_id}).  Numerators: #{@numerators.inspect} Denominators: #{@denominators.inspect}"
       end
 
       def string_form
-        Compound.string_form(@numerators,@denominators)
+        Dimension.string_form(@numerators,@denominators)
       end
       
       # A vaguely human-readable, vaguely machine-readable string description of this dimension
       # @ param [[DimensionComponent],[DimensionComponent]]
       # @return [String]
-      def self.string_form(numerators, denominators)
+      def self.string_form(numerators, denominators = nil)
+        # We sometimes get [numerators,denominators],nil
+        (numerators,denominators) = numerators if (numerators.first.is_a?(Array))
         string = ""
         string_thunk = lambda do | array |
           array.each_with_index do | component, n |
-            string << component.dimension.name.to_s
+            string << component.dimension.to_s
             (string << '^' << component.power.to_s) if component.power.to_i > 1
             string << '*' if n < array.size - 1
           end
@@ -380,16 +227,15 @@ class Quantity
           if !string.nil?
             string.split(/\*/).each do | component |
               (dimension, power) = component.split(/\^/)
-              components << Compound::DimensionComponent.new(Dimension.for(dimension.to_sym),power.nil? ? 1 : power.to_i)
+              components << DimensionComponent.new(dimension.to_sym,power.nil? ? 1 : power.to_i)
             end
           end
           components
         end
-        (top, bottom) = serialized.split(/\//) 
-        [parse_thunk.call(top), parse_thunk.call(bottom)]
+        (top, bottom) = serialized.to_s.split(/\//) 
+        Dimension.reduce(parse_thunk.call(top), parse_thunk.call(bottom))
       end
 
-    end
 
   end
 end

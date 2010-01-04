@@ -1,9 +1,9 @@
-require 'quantity/version'
-require 'quantity/dimension'
-require 'quantity/dimension/base'
-require 'quantity/unit'
-require 'quantity/systems/si'
-require 'quantity/systems/us'
+#require 'quantity/version'
+#require 'quantity/dimension'
+#require 'quantity/dimension/base'
+#require 'quantity/unit'
+#require 'quantity/systems/si'
+#require 'quantity/systems/us'
 
 #
 # A quantity of something.  Quantities are immutable; conversions and other operations return
