@@ -32,8 +32,7 @@ class Quantity
     # @param [Symbol String Unit] to
     # @return [Unit]
     def self.for(to)
-      unit = to.is_a?(Unit) ? to : @@units[to]
-      #unit.nil? ? Unit::Compound.from_string_form(to) : unit
+      to.is_a?(Unit) ? to : @@units[to]
     end
 
     # Whether or not the given symbol or string refers to an existing unit
@@ -58,26 +57,28 @@ class Quantity
     # @param [Symbol] name 
     # @param [Numeric] value
     # @param [[String Symbol]] *aliases
-    def self.add_unit(dimension,name,value,*names)
-      new_unit = Unit.new(name,dimension,value,*names)
+    def self.add_unit(name,dimension,value,*names)
+      new_unit = Unit.new({ :name => name,:dimension => dimension,:value => value})
+      names.each do | name |
+        add_alias new_unit, name
+      end
+    end
+    class << self ; alias_method :add, :add_unit; end
+
+    # Add a number of units to the system
+    # @example
+    #     length = Quantity::Dimension.for(:length)
+    #     Quantity::Unit.add_units do
+    #       add :meter length 1000
+    #       add :mm :length 1
+    #     end
+    def self.add_units(&block)
+      self.class_eval(&block)
     end
 
     ### Instance-level methods/vars
     attr_reader :name, :value, :dimension, :aliases
     
-    def initialize(name, dimension, value, *aliases)
-      @name = name
-      @dimension = Dimension.for(dimension)
-      @value = value
-      @aliases = aliases
-      self.class.add_alias(self,name,*aliases)
-      if @dimension.nil?
-        warn "Warning: Adding unit with nil dimension (#{name} - #{dimension})"
-      else
-        @dimension.register!(self)
-      end
-    end
-
     # All the known aliases for this Unit, i.e. name + aliases
     # @return [[Symbol String]]
     def names
@@ -127,37 +128,8 @@ class Quantity
       "#{value} #{@name.to_s}"
     end
 
-    # Unit multiplication.
-    # @param [Unit] other
-    # @return [Unit]
-    def *(other)
-      if other.is_a?(Unit::Compound)
-        other * self
-      elsif other.is_a?(self.class)
-        Unit::Compound.new({ :dimension => dimension * other.dimension, 
-                             :units => { dimension => self, other.dimension => other}})
-      else
-        raise ArgumentError, "Cannot multiply #{self} with #{other}"
-      end
-    end
-
-    # Unit division
-    # @param [Unit] other
-    # @return [Unit]
-    def /(other)
-      if other.is_a?(Unit::Compound)
-        Unit::Compound.new({ :dimension => dimension / other.dimension, 
-                             :units => other.units.merge({ dimension => self}) })
-      elsif other.is_a?(self.class)
-        Unit::Compound.new({ :dimension => dimension / other.dimension, 
-                             :units => { dimension => self, other.dimension => other}})
-      else
-        raise ArgumentError, "Cannot divide #{self} by #{other}"
-      end
-    end
-
     def inspect
-      "Unit #{@name} (#{@object_id}), value #{@value}, dimension #{@dimension}, aliases #{@aliases}"
+      "<Unit #{@name} (#{@object_id}), value #{@value}, dimension #{@dimension}>"
     end
 
     def <=>(other)
@@ -181,182 +153,144 @@ class Quantity
       end
     end
 
-    # A compound unit, such as meter^2.  A compound unit, like a normal unit, has a single domain.
-    # That domain is a compound domain, the result of multiplying and dividing base domains.
-    #
-    # 
-    class Compound < Unit
-
-      # A method that Dimensions can use to obtain a reference unit for themselves
-      # @param [Dimension::Compound] dimension
-      # @return [Unit::Compound] unit
-      def self.reference_unit_for(dimension)
-        unit = self.new(dimension)
-        if Unit.for(unit.string_form).nil?
-          add_alias(unit,unit.string_form)
-          unit
-        else
-          Unit.for(unit.string_form)
-        end
+    # Unit multiplication.
+    # @param [Unit] other
+    # @return [Unit]
+    def *(other)
+      if other.is_a?(Unit)
+        units = other.units || { other.dimension => other }
+        units.merge!(@units || { @dimension => self })
+        dim = @dimension * other.dimension
+        existing = Unit.for(Unit.string_form(dim,units).to_sym)
+        existing ||= Unit.new({ :dimension => dim, :units => units }) 
+      else
+        raise ArgumentError, "Cannot multiply #{self} with #{other}"
       end
+    end
 
-
-      # Unit multiplication.
-      # @param [Unit] other
-      # @return [Unit]
-      def *(other)
-        if other.is_a?(Unit::Compound)
-          Unit::Compound.new({ :dimension => dimension * other.dimension, 
-                                :units => other.units.merge(@units) })
-        elsif other.is_a?(Unit)
-          Unit::Compound.new({ :dimension => dimension * other.dimension, 
-                                :units => { other.dimension => other}.merge(@units) })
-        else
-          raise ArgumentError, "Cannot multiply #{self} with #{other}"
-        end
+    # Unit division.
+    # @param [Unit] other
+    # @return [Unit]
+    def /(other)
+      if other.is_a?(Unit)
+        units = other.units || { other.dimension => other }
+        units.merge!(@units || { @dimension => self })
+        dim = @dimension / other.dimension
+        existing = Unit.for(Unit.string_form(dim,units).to_sym)
+        existing ||= Unit.new({ :dimension => dim, :units => units }) 
+      else
+        raise ArgumentError, "Cannot multiply #{self} with #{other}"
       end
+    end
 
-      # Unit division.
-      # @param [Unit] other
-      # @return [Unit]
-      def /(other)
-        if other.is_a?(Unit::Compound)
-          Unit::Compound.new({ :dimension => dimension / other.dimension, 
-                                :units => other.units.merge(@units) })
-        elsif other.is_a?(Unit)
-          Unit::Compound.new({ :dimension => dimension / other.dimension, 
-                                :units => { other.dimension => other}.merge(@units) })
-        else
-          raise ArgumentError, "Cannot multiply #{self} with #{other}"
-        end
+    # Convert a portion of this compound to another unit.
+    # This one is tricky, because a lot of things can be happening.
+    # It's valid to convert m^2 to ft^2 and to feet (ft^2), but not 
+    # really valid to convert to ft^3.
+    # @param [Symbol Unit] to
+    # @return [Unit]
+    def convert(target)
+      to = Unit.from_string_form(target)
+      if (to.dimension == @dimension)
+        to
+      elsif @units && @units[to.dimension]
+        units = @units.merge({ to.dimension => to })
+        unit = Unit.for(Unit.string_form(@dimension,units).to_sym)
+        unit ||= Unit.new({ :dimension => @dimension, :units => units }) 
+        unit 
+      else
+        raise ArgumentError, "Cannot convert #{self} to #{target}"
       end
+    end
 
-      # Convert a portion of this compound to another unit.
-      # This one is tricky, because a lot of things can be happening.
-      # It's valid to convert m^2 to ft^2 and to feet (ft^2), but not 
-      # really valid to convert to ft^3.
-      # @param [Symbol Unit] to
-      # @return [Unit]
-      def convert(to)
-        to = Unit.for(to) if Unit.for(to)
-        if to.is_a?(String)
-          unit = self.class.from_string_form(to)
-          Unit.add_alias(unit, to)
-          unit
-        elsif to.is_a?(Compound)
-          if to.dimension == @dimension
-            to
-          else
-            raise ArgumentError, "Cannot convert #{self} to #{to}"
-          end
-        elsif to.is_a?(Unit) # basic unit, which can only mean converting a compoent for our compound
-          Unit::Compound.new({ :dimension => @dimension,
-                               :units => @units.merge({to.dimension => to}) })
-        else
-          raise ArgumentError, "Cannot convert #{self} to #{to}"
-        end
-      end
-
-      # Parse a string representation of a unit, such as foot^2/time^2, and return
-      # a compound object representing it.
-      def self.from_string_form(to)
+    # Parse a string representation of a unit, such as foot^2/time^2, and return
+    # a compound object representing it.
+    def self.from_string_form(to)
+      if Unit.for(to)
+        Unit.for(to)
+      else
+        dimension_string = to.to_s.dup
         units = {}
-        dimension_string = to
-        to.split(/(\^|\/|\*)/).each do | name |
+        to.to_s.split(/(\^|\/|\*)/).each do | name |
           next if name =~ /(\^|\/|\*)/ || name =~ /^\d$/
-          unit = Unit.for(name) || Unit.for(name.to_sym)
+          unit = Unit.for(name.to_sym) || Unit.for(name)
           dimension_string.gsub!(name,unit.dimension.name.to_s)
           units[unit.dimension] = unit
         end
-        dimension = Dimension::Compound.for(Dimension::Compound.parse_string_form(dimension_string))
-        Unit::Compound.new({ :dimension => dimension, :units => units })
+        dimension = Dimension.for(dimension_string.to_sym)
+        raise ArgumentError, "Couldn't create Unit for #{to}" unless dimension && units
+        unit = Unit.new({ :dimension => dimension, :units => units })
+        add_alias(unit,unit.name.to_sym)
+        unit
       end
-      
+    end
+    
 
-      attr_reader :units
-      @units = {}
-      # A new compound unit.  There are two modes of operation.  One provides a way to add units with
-      # a DSL.  The other provides an options hash a little better for programming.  The last provides
-      # a way to create a unit for a given dimension--useful for reference units.
-      #
-      # @overload initialize(name, dimension, value, *aliases)
-      #   @param [Symbol] name
-      #   @param [Dimension Symbol String] name
-      #   @param [Numeric] value
-      #   @param [[aliases]] *aliases
-      #
-      # @overload initialize(opts = {})
-      #   @param opts [String Symbol]  :name
-      #   @param opts [[Unit]]  :units
-      #   @param opts [Dimension::Compound] :dimension
-      # @return [Unit::Compound]
-      def initialize(name, dimension = nil, value = nil, *aliases)
-        if name.is_a?(Hash)
-          opts = name
-          @units = opts.delete(:units)
-          @dimension = opts.delete(:dimension)
-          @aliases = []
-          calculate_value
-          @name = opts.delete(:name) || string_form
-        elsif name.is_a?(Dimension)
-          @dimension = name
-          units = []
-          @units = {}
-          @dimension.numerators.each { | component | @units[component.dimension] = component.dimension.reference }
-          @dimension.denominators.each { | component | @units[component.dimension] = component.dimension.reference }
-          @aliases = []
-          @name = string_form
-          calculate_value
-        else
-          @name = name
-          @dimension = Dimension.for(dimension)
-          #@reference = @dimension.reference
-          @value = value
-          @aliases = aliases
-        end
-        self.class.add_alias(self,name,*aliases)
-        if @dimension.nil?
-          warn "Warning: Adding unit with nil dimension (#{name} - #{dimension})"
-        else
-          @dimension.register!(self)
+    # Higher-order units have a set of units to reference each aspect of the dimension they
+    # measure.  This is unused in basic units.
+    attr_reader :units
+
+    # A new compound unit.  There are two modes of operation.  One provides a way to add units with
+    # a DSL.  The other provides an options hash a little better for programming.  The last provides
+    # a way to create a unit for a given dimension--useful for reference units.
+    #
+    # @overload initialize(opts = {})
+    #   @param opts [String Symbol]  :name
+    #   @param opts [[Unit]]  :units
+    #   @param opts [Dimension::Compound] :dimension
+    # @return [Unit::Compound]
+    def initialize(opts)
+      @units = opts[:units]
+      @dimension = opts[:dimension]
+      @value = @dimension.is_base? ? opts[:value] : calculate_value
+      if @dimension.nil?
+        raise ArgumentError, "Adding invalid unit with nil dimension (#{name} - #{dimension})"
+      end
+      unless opts[:name] || !@dimension.is_base?
+        raise ArgumentError, "Single-order units must be uniquely named (#{name} - #{dimension})"
+      end
+      @name = opts[:name] || string_form
+      self.class.add_alias(self,@name.to_sym)
+    end
+
+    # calculate this unit's value compared to the reference unit
+    def calculate_value
+      value = 1
+      @dimension.numerators.each do | component |
+        component.power.times do 
+          value *= @units[Quantity::Dimension.for(component.dimension)].value
         end
       end
-
-      # calculate this unit's value compared to the reference unit
-      def calculate_value
-        value = 1
-        @dimension.numerators.each do | component |
-          component.power.times do 
-            value *= @units[component.dimension].value
-          end
+      @dimension.denominators.each do | component |
+        component.power.times do 
+          value /= @units[Quantity::Dimension.for(component.dimension)].value
         end
-        @dimension.denominators.each do | component |
-          component.power.times do 
-            value /= @units[component.dimension].value
-          end
-        end
-        @value = value
       end
+      @value = value
+    end
 
-      # A vaguely human-readable form for this unit
-      # @return [String]
-      def string_form
-        self.class.string_form(@dimension,@units)
+    # A vaguely human-readable form for this unit
+    # @return [String]
+    def string_form
+      self.class.string_form(@dimension,@units)
+    end
+
+    # a vaguely human-readable format for a compound unit 
+    # @param [Dimension] dimension
+    # @param [{}] units
+    # @return [String]
+    def self.string_form(dimension,units)
+      string = dimension.string_form
+      units.each do | dimension, unit |
+        string = string.gsub(dimension.name.to_s, unit.name.to_s)
       end
+      string
+    end
 
-      # a vaguely human-readable format for a compound unit 
-      # @param [Dimension] dimension
-      # @param [{}] units
-      # @return [String]
-      def self.string_form(dimension,units)
-        string = dimension.string_form
-        units.each do | dimension, unit |
-          string = string.gsub(dimension.name.to_s, unit.name.to_s)
-        end
-        string
-      end
-
-    end #Compound class
-
+    # Reset the world.  Useful in testing.
+    # @private
+    def self.__reset!
+      @@units = {}
+    end
   end
 end

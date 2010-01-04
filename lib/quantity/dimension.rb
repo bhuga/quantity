@@ -46,7 +46,8 @@ class Quantity
     # @param [[Symbol String]] *aliases
     def self.add_dimension(name, *aliases)
       dim = self.for(name) ? self.for(name) : self.new({ :name => aliases.first , :description => name})
-      self.add_alias(dim,*aliases)
+      self.add_alias(dim,name)
+      self.add_alias(dim,dim.string_form.to_sym,*aliases)
       dim
     end
 
@@ -120,121 +121,129 @@ class Quantity
       self * reciprocal
     end
 
-      # Dimensional exponentiation
-      # @param [Numeric] other
-      # @result [Compound]
-      def **(other)
-        raise ArgumentError, "Dimensions can only be raised to whole powers" unless other.is_a?(Fixnum) && other > 0
-        other == 1 ? self : self * self**(other-1)
-      end
+    # Dimensional exponentiation
+    # @param [Numeric] other
+    # @result [Compound]
+    def **(other)
+      raise ArgumentError, "Dimensions can only be raised to whole powers" unless other.is_a?(Fixnum) && other > 0
+      other == 1 ? self : self * self**(other-1)
+    end
  
-      # Whether or not this is a compound representation of a base dimension
-      # @return [Boolean]
-      def is_base?
-        @denominators.size == 0 && @numerators.size == 1 && @numerators.first.power = 1
-      end
+    # Whether or not this is a compound representation of a base dimension
+    # @return [Boolean]
+    def is_base?
+      @denominators.size == 0 && @numerators.size == 1 && @numerators.first.power == 1
+    end
 
-      # Spaceship operator for comparable.
-      # @param [Any] other
-      # @return [-1 0 1]
-      def <=>(other)
-        if other.is_a?(Dimension)
-          if self.is_base? && other.is_base?
-            name.to_s <=> other.name.to_s
-          elsif other.is_base?
-            1
-          else
-            string_form <=> other.string_form
-          end
+    # Spaceship operator for comparable.
+    # @param [Any] other
+    # @return [-1 0 1]
+    def <=>(other)
+      if other.is_a?(Dimension)
+        if self.is_base? && other.is_base?
+          name.to_s <=> other.name.to_s
+        elsif other.is_base?
+          1
         else
-          nil
+          string_form <=> other.string_form
         end
+      else
+        nil
       end
+    end
 
-      def name=(new_name)
-        @name = new_name
-        Dimension.add_alias Compound.for(self), new_name
-      end
+    # Returns a developer-friendly representation of this value.
+    #
+    # The string will be of the format `#<Quantity::Dimension::0x12345678(...)>`,
+    # where `...` is the string returned by #to_s.
+    #
+    # @return [String]
+    def inspect
+      sprintf("#<%s:%#0x %s (%s)>", self.class.name, object_id, string_form, @name)
+    end
 
-      # Returns numerators and denominators that represent the reduced form of the given
-      # numerators and denominators
-      # @return [[Array],[Array]]
-      def self.reduce(numerators,denominators)
-        new_numerators = reduce_multiplied_units(numerators)
-        new_denominators = reduce_multiplied_units(denominators)
 
-        new_numerators.each_with_index do | comp, i |
-          new_denominators.each_with_index do | dcomp, j |
-            if dcomp.dimension == comp.dimension
-              diff = [dcomp.power,comp.power].max - (dcomp.power - comp.power).abs
-              dcomp.power -= diff
-              comp.power -= diff
-              new_numerators.delete_at(i) if comp.power <= 0
-              new_denominators.delete_at(j) if dcomp.power <= 0
-            end
-          end
-        end
-        [new_numerators, new_denominators]
-        # TODO: divide
-      end
-
-      # Reduce an array of units to its most compact, sorted form
-      # @param [[DimensionComponent]]
-      # @return [[DimensionComponent]]
-      def self.reduce_multiplied_units(array)
-        new = {}
-        array.each do | item |
-          new[item.dimension] = DimensionComponent.new(item.dimension,0) unless new[item.dimension]
-          new[item.dimension].power += item.power
-        end
-        new.values.sort { |a,b| a.dimension.to_s <=> b.dimension.to_s }
-      end
-
-      def inspect
-        "Dimension #{@name} (#{object_id}).  Numerators: #{@numerators.inspect} Denominators: #{@denominators.inspect}"
-      end
-
-      def string_form
-        Dimension.string_form(@numerators,@denominators)
-      end
+    # Returns a vaguely human-readable and parsable description of this dimension
+    # @return [String]
+    def string_form
+      Dimension.string_form(@numerators,@denominators)
+    end
       
-      # A vaguely human-readable, vaguely machine-readable string description of this dimension
-      # @ param [[DimensionComponent],[DimensionComponent]]
-      # @return [String]
-      def self.string_form(numerators, denominators = nil)
-        # We sometimes get [numerators,denominators],nil
-        (numerators,denominators) = numerators if (numerators.first.is_a?(Array))
-        string = ""
-        string_thunk = lambda do | array |
-          array.each_with_index do | component, n |
-            string << component.dimension.to_s
-            (string << '^' << component.power.to_s) if component.power.to_i > 1
-            string << '*' if n < array.size - 1
-          end
+    # A vaguely human-readable, vaguely machine-readable string description of 
+    # a set of numerators and denominators.
+    # @private
+    # @ param [[DimensionComponent],[DimensionComponent]]
+    # @return [String]
+    def self.string_form(numerators, denominators = nil)
+      # We sometimes get [numerators,denominators],nil
+      (numerators,denominators) = numerators if (numerators.first.is_a?(Array))
+      string = ""
+      string_thunk = lambda do | array |
+        array.each_with_index do | component, n |
+          string << component.dimension.to_s
+          (string << '^' << component.power.to_s) if component.power.to_i > 1
+          string << '*' if n < array.size - 1
         end
-        string_thunk.call(numerators)
-        string << "/" if denominators && denominators.size > 0
-        string_thunk.call(denominators) if denominators
-        string
       end
+      string_thunk.call(numerators)
+      string << "/" if denominators && denominators.size > 0
+      string_thunk.call(denominators) if denominators
+      string
+    end
 
-      # Parse the output of string_form into numerators and denominators
-      # @param [String] string
-      # @return [[DimensionComponent],[DimensionComponent]]
-      def self.parse_string_form(serialized)
-        parse_thunk = lambda do | string |
-          components = []
-          if !string.nil?
-            string.split(/\*/).each do | component |
-              (dimension, power) = component.split(/\^/)
-              components << DimensionComponent.new(dimension.to_sym,power.nil? ? 1 : power.to_i)
-            end
+    # Parse the output of string_form into numerators and denominators
+    # @param [String] string
+    # @return [[DimensionComponent],[DimensionComponent]]
+    # @private
+    def self.parse_string_form(serialized)
+      parse_thunk = lambda do | string |
+        components = []
+        if !string.nil?
+          string.split(/\*/).each do | component |
+            (dimension, power) = component.split(/\^/)
+            components << DimensionComponent.new(dimension.to_sym,power.nil? ? 1 : power.to_i)
           end
-          components
         end
-        (top, bottom) = serialized.to_s.split(/\//) 
-        Dimension.reduce(parse_thunk.call(top), parse_thunk.call(bottom))
+        components
       end
+      (top, bottom) = serialized.to_s.split(/\//) 
+      Dimension.reduce(parse_thunk.call(top), parse_thunk.call(bottom))
+    end
+
+    # Returns numerators and denominators that represent the reduced form of the given
+    # numerators and denominators
+    # @return [[Array],[Array]]
+    # @private
+    def self.reduce(numerators,denominators)
+      new_numerators = reduce_multiplied_units(numerators)
+      new_denominators = reduce_multiplied_units(denominators)
+ 
+      new_numerators.each_with_index do | comp, i |
+        new_denominators.each_with_index do | dcomp, j |
+          if dcomp.dimension == comp.dimension
+            diff = [dcomp.power,comp.power].max - (dcomp.power - comp.power).abs
+            dcomp.power -= diff
+            comp.power -= diff
+            new_numerators.delete_at(i) if comp.power <= 0
+            new_denominators.delete_at(j) if dcomp.power <= 0
+          end
+        end
+      end
+      [new_numerators, new_denominators]
+    end
+
+    # Reduce an array of units to its most compact, sorted form
+    # @param [[DimensionComponent]]
+    # @return [[DimensionComponent]]
+    # @private
+    def self.reduce_multiplied_units(array)
+      new = {}
+      array.each do | item |
+        new[item.dimension] = DimensionComponent.new(item.dimension,0) unless new[item.dimension]
+        new[item.dimension].power += item.power
+      end
+      new.values.sort { |a,b| a.dimension.to_s <=> b.dimension.to_s }
+    end
 
 
   end

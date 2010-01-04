@@ -2,13 +2,6 @@ $:.unshift(File.expand_path(File.join(File.dirname(__FILE__), 'lib')))
 
 require 'quantity/dimension'
 
-  # we'll be using these for the rest of the specs
-  #length = Quantity::Dimension.for(:length)
-  #mass = Quantity::Dimension.for(:length)
-  #area = Quantity::Dimension.for(:length)
-  #accel = Quantity::Dimension.for(:length)
-  #force = Quantity::Dimension.for(:'mass*length/time^2')
-
 describe Quantity::Dimension do
   
   # We use these for testing dimension.  the systems are tested in a separate spec.
@@ -46,6 +39,7 @@ describe Quantity::Dimension do
     area.to_s.should == "area"
     area.name.should == :area
     area.class.should == Area
+    area.string_form.should == 'length^2'
     accel.class.should == Acceleration
     accel.to_s.should == "acceleration"
     accel.name.should == :acceleration
@@ -117,6 +111,7 @@ describe Quantity::Dimension do
     accel.numerators.first.power.should == 1
     accel.denominators.first.power.should == 2
     accel.denominators.first.dimension.should == :time
+    accel.should equal(@accel)
     force = @accel * @mass
     force.numerators.first.dimension.should == :length
     force.numerators.first.power.should == 1
