@@ -52,11 +52,15 @@ class Quantity
     def self.add_dimension(name, *aliases)
       dim = nil
       if name.is_a?(Dimension) 
-        name.name = aliases.first if aliases.first
         dim = name
+        name.name = aliases.first if aliases.first
       else
         dim = self.for(name) || self.new({ :name => aliases.first , :description => name})
         self.add_alias(dim,name)
+      end
+      unless (dim.class == Dimension) 
+        dim.name = dim.class.name.downcase.split(/::/).last.to_sym
+        self.add_alias(dim,dim.name)
       end
       self.add_alias(dim,*aliases)
       dim
@@ -108,7 +112,7 @@ class Quantity
         raise ArgumentError, "Invalid options for dimension constructors"
       end
       raise ArgumentError, "Dimensions require a numerator" unless @numerators.first.dimension
-      @name = (self.class == Dimension) ? (opts[:name] || string_form.to_sym) : self.class.name.downcase.to_sym
+      @name = opts[:name] || string_form.to_sym
       Dimension.add_alias(self,@name)
       Dimension.add_alias(self,string_form.to_sym)
     end

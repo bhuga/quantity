@@ -24,6 +24,7 @@ require 'quantity/dimension/base'
 # @see http://physics.nist.gov/cuu/Units/prefixes.html
 class Quantity
   class Unit
+    module SI
   prefixes = {}
   units = {}
   aliases = {}
@@ -98,5 +99,6 @@ class Quantity
   end
   add_alias :liter, :l
 
+    end
   end
 end
