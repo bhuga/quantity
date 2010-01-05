@@ -122,7 +122,7 @@ class Quantity
 
     # Dimensional multiplication
     # @param [Dimension] other
-    # @result [Dimension::Compound] 
+    # @return [Dimension] 
     def *(other)
       raise ArgumentError, "Cannot multiply #{self} and #{other.class}" unless other.is_a?(Dimension)
       (new_n, new_d) = Dimension.reduce(@numerators + other.numerators, @denominators + other.denominators)
@@ -132,7 +132,7 @@ class Quantity
 
     # Dimensional division
     # @param [Dimension] other
-    # @result [Dimension::Compound] 
+    # @return [Dimension] 
     def /(other)
       raise ArgumentError, "Cannot divide #{self} by #{other.class}" unless other.is_a?(Dimension)
       (new_n, new_d) = Dimension.reduce(@numerators + other.denominators, @denominators + other.numerators)
@@ -142,7 +142,7 @@ class Quantity
 
     # Dimensional exponentiation
     # @param [Numeric] other
-    # @result [Compound]
+    # @return [Dimension]
     def **(other)
       raise ArgumentError, "Dimensions can only be raised to whole powers" unless other.is_a?(Fixnum) && other > 0
       other == 1 ? self : self * self**(other-1)

@@ -9,7 +9,10 @@ GEMSPEC = Gem::Specification.new do |gem|
   gem.homepage           = 'http://quantity.rubyforge.org/'
   gem.license            = 'Public Domain' if gem.respond_to?(:license=)
   gem.summary            = 'Units and quantities for Ruby.'
-  gem.description        = gem.summary
+  gem.description = <<-EOF
+    Quantity provides first-class quantities, units, and base quantities in pure ruby.
+    Things like 1.meter / 1.second == 1 meter/second.
+  EOF
   gem.rubyforge_project  = 'quantity'
 
   gem.authors            = ['Ben Lavender', 'Arto Bendiken']

@@ -159,7 +159,7 @@ class Quantity
 
     # Exponentiation
     # @param other [Numeric]
-    # @return [Unit::Compound]
+    # @return [Unit]
     def **(other)
       if other.is_a?(Fixnum) && other > 0
         other == 1 ? self : self * self**(other-1)
@@ -253,8 +253,8 @@ class Quantity
     # @overload initialize(opts = {})
     #   @param opts [String Symbol]  :name
     #   @param opts [[Unit]]  :units
-    #   @param opts [Dimension::Compound] :dimension
-    # @return [Unit::Compound]
+    #   @param opts [Dimension] :dimension
+    # @return [Unit]
     def initialize(opts)
       @units = opts[:units]
       @dimension = opts[:dimension]
