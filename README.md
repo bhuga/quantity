@@ -3,7 +3,7 @@ Quantity.rb: Units and Quantities for Ruby
 Quantity.rb provides first-class supports for units and quantities in Ruby.
 The right abstractions for true quantity representation and complex conversions.
 
-## Quick Intro
+## Overview
     require 'quantity/all'
     1.meter                                                 #=> 1 meter
     1.meter.to_feet                                         #=> 3.28083... foot
@@ -23,7 +23,6 @@ The right abstractions for true quantity representation and complex conversions.
     m_to_f = Quantity::Unit.for(:meter).convert_proc(:feet)
     m_to_f.call(1)                                          #=> 3.28083... (or a Rational)
 
-## Overview
 Quantity.rb provides full-featured support for quantities, units, and
 dimensions in ruby.  Some terminology:
 
@@ -32,15 +31,15 @@ dimensions in ruby.  Some terminology:
   * Dimension: Some base quantity to be measured, such as 'length'
 
 Quantities perform complete mathematical operations over their units,
-including +, -, *, /, **, %, abs, divmod, <=>, and negation.  Units
+including +, -, \*, /, \*\*, %, abs, divmod, <=>, and negation.  Units
 and the dimensions they measure are fully represented and support
-* and /.
+\* and /.
 
 Quantity extends Numeric to allow easy creation of quantities, but there
 are direct interfaces to the library as well.
 
-    1.meter  ==               Quantity.new(1,Quantity::Unit.for(:meter)) 
-    1.meter.unit ==           Quantity::Unit.for(:meter)
+    1.meter                == Quantity.new(1,Quantity::Unit.for(:meter)) 
+    1.meter.unit           == Quantity::Unit.for(:meter)
     1.meter.unit.dimension == Quantity::Dimension.for(:length)
 
 See the units section for supported units, and how to add your own.
@@ -51,22 +50,6 @@ any situation a numeric can:
 
     2.5 + 5.meters    # => 7.5 meters
     5 == 5.meters     # => true
-
-### On precision and speed
-
-By default, whatever Numeric you are using will be the stored value for the
-quantity.
-
-    5.meters
-    Rational(5).meters
-    5.0.meters
-
-This value will be held.  However, divisions are required for conversions,
-and the default is to force values into floats.
-
-If accuracy is required, just require 'rational'.  If Rational is defined,
-you'll get rationals instead of divided floats everywhere.  In tests, this
-is an order of magnitude slower.
 
 ## Status and TODO
 Quantity.rb is not ready for production use for some areas, but should be
@@ -100,6 +83,7 @@ A number of base unit sets exist:
     require 'quantity/systems/us'             #=> load US versions of foot, lb, etc
     require 'quantity/systems/imperial'       #=> load british versions of foot, lb, etc
     require 'quantity/systems/information'    #=> bits, bytes, and all that
+    require 'quantity/systems/enumerable'     #=> countable things--dozen, score, etc
 
 Note that us and imperial conflict with each other.  Loading both is unsupported.
 
@@ -118,7 +102,7 @@ All units for derived dimensions used the derived reference unit.  For example, 
 is referenced to millimeters, so each unit of length is defined in terms of them:
 
     Quantity::Unit.add_unit :meter, :length, 1000
-    Quantity::Unit.add_unit :millimeter, :length, 1000, :mm
+    Quantity::Unit.add_unit :millimeter, :length, 1, :mm
 
 Thus, the base unit for volume is 1 millimeter^3:
      volume = Quantity::Dimension.add_dimension length**3, :volume
@@ -192,6 +176,21 @@ your application needs, and then bypass the rest of the library.
 This proc has been broken down into a single division; it no longer references
 any units, dimensions, or quantities.  It's hard to be faster in pure ruby.
 
+### On precision and speed
+
+By default, whatever Numeric you are using will be the stored value for the
+quantity.
+
+    5.meters
+    Rational(5).meters
+    5.0.meters
+
+This value will be held.  However, divisions are required for conversions,
+and the default is to force values into floats.
+
+If accuracy is required, just require 'rational'.  If Rational is defined,
+you'll get rationals instead of divided floats everywhere.  In tests, this
+is an order of magnitude slower.
 
 ## 'Why' and previous work
 This is by no means the first unit conversion/quantity library for Ruby, but
