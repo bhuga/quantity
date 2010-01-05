@@ -11,12 +11,13 @@ describe Quantity::Unit do
     class Length < Quantity::Dimension ; end
     class Area < Quantity::Dimension ; end
     class Acceleration < Quantity::Dimension ; end
-    Length.add_dimension :length, :width
+    length = Length.add_dimension :length, :width
     Area.add_dimension :'length^2'
     Acceleration.add_dimension :'length/time^2'
     Quantity::Dimension.add_dimension :mass
     Quantity::Dimension.add_dimension :time
     Quantity::Dimension.add_dimension :'mass*length/time^2', :force
+    Quantity::Dimension.add_dimension length**3, :volume
   end
 
   before(:each) do
@@ -26,12 +27,15 @@ describe Quantity::Unit do
     @accel = Quantity::Dimension.for(:acceleration)
     @force = Quantity::Dimension.for(:force)
     @time = Quantity::Dimension.for(:time)
+    @volume = Quantity::Dimension.for(:volume)
 
     @meter = Quantity::Unit.for(:meter)
+    @mm = Quantity::Unit.for(:mm)
     @inch = Quantity::Unit.for(:inch)
     @foot = Quantity::Unit.for(:foot)
     @second = Quantity::Unit.for(:second)
     @gram = Quantity::Unit.for(:gram)
+    @liter = Quantity::Unit.for(:liter)
   end
 
   it "should respond correctly to the DSL and add units" do
@@ -44,6 +48,7 @@ describe Quantity::Unit do
     Quantity::Unit.add_unit :nanosecond, @time, 10**-6, :nanoseconds
     Quantity::Unit.add_unit :picogram, @mass, 10**-9, :picograms
     Quantity::Unit.add_unit :mps, @accel, 10**12, :meterspersecond
+    Quantity::Unit.add_unit :liter, @volume, 10**6, :liters, :l
     meters = Quantity::Unit.for :meter 
     meters.dimension.should == @length
     meters.name.should == :meter
@@ -106,6 +111,11 @@ describe Quantity::Unit do
     accel.dimension.should equal(accel_dim)
     accel.name.should == 'meter/second^2'
     (accel * @second).should equal(m_s)
+    x = (@mm**3) / @second
+    x.value.should == 1 / 1000.0
+    lps = @liter / @second
+    lps.unit.dimension.name.should == :'length^3/time'
+    lps.unit.name.should == :'liter/second'
   end
 
   it "should convert complex units" do

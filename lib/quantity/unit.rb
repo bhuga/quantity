@@ -105,12 +105,13 @@ class Quantity
     # @param [Symbol String Unit]
     # @return [Unit]
     def convert_proc(to)
-      to = Unit.for(to)
+      to = convert(to)
+      #to = Unit.for(to)
       raise ArgumentError, "Unable to find unit #{to}" unless to
       unless (to.dimension == self.dimension)
         raise ArgumentError, "Cannot convert #{self.dimension} to #{to.dimension}"
       end
-      if (defined? Rational) && defined?(@value.gcd)
+      if (defined? Rational) && @value.is_a?(Fixnum)
         lambda do | from |
           from * Rational(@value, to.value) 
         end
@@ -118,6 +119,20 @@ class Quantity
         lambda do | from |
           from * (@value / to.value.to_f)
         end
+      end
+    end
+
+    # The value for a given reference value.
+    # @example
+    #     Unit.add_unit :meter, :length, :1000
+    #     Unit.for(:meter).value_for(5000) = 5
+    # @param [Numeric] value
+    # @return [Numeric]
+    def value_for(reference_value)
+      if defined? Rational && @value.is_a?(Fixnum)
+        reference_value / @value #Rational(reference_value, @value)
+      else
+        reference_value / @value.to_f
       end
     end
 
@@ -178,6 +193,7 @@ class Quantity
         dim = @dimension / other.dimension
         existing = Unit.for(Unit.string_form(dim,units).to_sym)
         existing ||= Unit.new({ :dimension => dim, :units => units }) 
+        existing
       else
         raise ArgumentError, "Cannot multiply #{self} with #{other}"
       end
@@ -251,13 +267,15 @@ class Quantity
       end
       @name = opts[:name] || string_form
       self.class.add_alias(self,@name.to_sym)
+      raise ArgumentError, "Creating new unit with no value" unless @value
     end
 
     # calculate this unit's value compared to the reference unit
     def calculate_value
-      value = 1
+      value = defined?(Rational) ? Rational(1) : 1.0
       @dimension.numerators.each do | component |
         component.power.times do 
+          # we might have a unit for a compound dimension, such as liters for length^3.
           value *= @units[Quantity::Dimension.for(component.dimension)].value
         end
       end

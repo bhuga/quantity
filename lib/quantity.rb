@@ -77,12 +77,12 @@ class Quantity
       when Hash
         @unit = Unit.for(value[:unit])
         @reference_value = value[:reference_value] || (value[:value] * @unit.value)
-        @value = @unit.dimension.reference.convert_proc(@unit).call(@reference_value)
+        @value = @unit.value_for(@reference_value) #dimension.reference.convert_proc(@unit).call(@reference_value)
         #@value = @unit.convert_proc(@unit).call(@reference_value)
       when Numeric
         @unit = Unit.for(unit)
         if @unit.nil?
-          @unit = Unit::Compound.from_string_form(unit)
+          @unit = Unit.from_string_form(unit)
         end
         @value = value
         @reference_value = value * @unit.value 
@@ -123,7 +123,7 @@ class Quantity
   def coerce(other)
     if other.class == @value.class
       [Quantity.new(other, @unit),self]
-    elsif defined? Rational &&  defined? @value.gcd && defined? other.gcd
+    elsif defined? Rational &&  @value.is_a?(Fixnum) && other.is_a?(Fixnum)
       [Quantity.new(Rational(other), @unit), self] 
     else
       [Quantity.new(other.to_f, @unit),Quantity.new(@value.to_f, @unit)]
@@ -199,7 +199,13 @@ class Quantity
     if (other.is_a?(Numeric))
       Quantity.new(@value / other, @unit)
     elsif(other.is_a?(Quantity))
-      Quantity.new({:unit => @unit / other.unit, :reference_value => @reference_value / other.reference_value})
+      ref = nil
+      if defined? Rational && defined? other.reference_value.gcd
+        ref = Rational(@reference_value,other.reference_value)
+      else
+        ref = @reference_value / other.reference_value
+      end
+      Quantity.new({:unit => @unit / other.unit, :reference_value => ref})
     else
       raise ArgumentError, "Cannot multiply #{other} with #{self}"
     end

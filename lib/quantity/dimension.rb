@@ -71,7 +71,6 @@ class Quantity
     # @param [[*names]]
     def self.add_alias(dimension, *names)
       names.each do |name|
-        #puts "adding dimension alias, #{name.inspect} for #{dimension.inspect}"
         raise ArgumentError, "Invalid dimension alias: #{name}" unless (name.to_s =~ /^(\^|\/)/).nil?
         @@dimensions[name] = dimension
       end

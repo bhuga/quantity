@@ -43,6 +43,7 @@ class Quantity
   prefixes['deci'] = 10 ** 2
   prefixes['centi'] = 10
   # milli is the reference point for SI-measured units
+  prefixes['milli'] = 1
   prefixes['micro'] = 10 ** -3
   prefixes['nano'] = 10 ** -6
   prefixes['pico'] = 10 ** -9
@@ -81,6 +82,7 @@ class Quantity
   add_alias :centimeter, :cm
   add_alias :meter, :m
   add_alias :nanometer, :nm
+  add_alias :millimeter, :mm
   add_unit :angstrom, :length, 10 ** -7, :angstroms
 
   add_alias :kilogram, :kg
@@ -96,6 +98,7 @@ class Quantity
     end
   end
   add_alias :liter, :l
+  add_alias :milliliter, :ml
 
   end
 end

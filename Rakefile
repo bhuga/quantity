@@ -13,9 +13,21 @@ Spec::Rake::SpecTask.new('spec') do |t|
   t.spec_opts = ["-cfn"]
 end
 
+desc "Run unit specs"
+Spec::Rake::SpecTask.new('unit') do |t|
+  t.spec_files = FileList['spec/dimension.spec', 'spec/unit.spec', 'spec/systems.spec']
+  t.spec_opts = ["-cfn"]
+end
+
 desc "specs with backtrace"
 Spec::Rake::SpecTask.new('tracespec') do |t|
   t.spec_files = FileList['spec/quantity.spec']
+  t.spec_opts = ["-bcfn"]
+end
+
+desc "unit specs with backtrace"
+Spec::Rake::SpecTask.new('traceunit') do |t|
+  t.spec_files = FileList['spec/dimension.spec', 'spec/unit.spec', 'spec/systems.spec']
   t.spec_opts = ["-bcfn"]
 end
 

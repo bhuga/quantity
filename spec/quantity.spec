@@ -115,6 +115,7 @@ describe Quantity do
     (2.meters / 2.picograms).unit.dimension.string_form.should == "length/mass"
     (2.meters / 2.picograms).units.should == "meter/picogram"
     (10.meters / 2.picograms).should be_close 5, 10**-5
+    ((1.mm**3)/ 1.second).value.should == 1
   end
 
   it "should convert derived units" do
@@ -125,11 +126,13 @@ describe Quantity do
   it "should convert derived classes to hard classes" do
     (1.centimeter * 1.centimeter * 1.centimeter).should == 0.1.centiliter
     (1.centimeter * 1.centimeter * 1.centimeter).should == 1.centimeter.cubed
-    (1.mm * 1.mm * 1.mm).should == 1.ml
+    (1000.mm * 1.mm * 1.mm).should == 1.ml
+    (1.mm**3).unit.name.should == 'millimeter^3'
+    (1.mm**3).unit.dimension.name.should == :volume
     0.1.centiliter.should == (1.cm * 1.cm * 1.cm)
-    (1.centimeter * 1.centimeter * 1.centimeter).measures.should == 'length^3'
-    (1.centimeter * 1.centimeter).measures.should == 'length^2'
-    (30.meters / 1.second).measures.should == 'length/time'
+    (1.centimeter * 1.centimeter * 1.centimeter).measures.name.should == :volume
+    (1.centimeter * 1.centimeter).measures.name.should == :area
+    (30.meters / 1.second).measures.name.should == :speed
   end
 
   it "should reduce derived units" do
