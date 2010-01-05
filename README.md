@@ -13,7 +13,7 @@ Hopefully this readme will be all you need, but [there are yardocs](http://quant
     newton = 1.meter * 1.kilogram / 1.second**2             #=> 1 meter*kilogram/second^2
     newton.to_feet                                          #=> 3.28083989501312 foot*kilogram/second^2
     newton.convert(:feet)                                   #=> 3.28083989501312 foot*kilogram/second^2
-    jerk_newton / 1.second                                  #=> 1 meter*kilogram/second^3
+    jerk_newton = newton / 1.second                         #=> 1 meter*kilogram/second^3
     jerk_newton * 1.second == newton                        #=> true
 
     mmcubed = 1.mm.cubed                                    #=> 1 millimeter^3
