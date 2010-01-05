@@ -83,6 +83,7 @@ class Quantity
   add_alias :meter, :m
   add_alias :nanometer, :nm
   add_alias :millimeter, :mm
+  add_alias :millisecond, :ms
   add_unit :angstrom, :length, 10 ** -7, :angstroms
 
   add_alias :kilogram, :kg

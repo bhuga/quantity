@@ -10,7 +10,7 @@ require 'quantity/systems/us'
 # a new quantity.
 #
 # ## General Use
-#     require 'quantity/si'
+#     require 'quantity/all'
 #
 #     12.meters                                     #=> Quantity
 #     12.meters.measures                            #=> :length
@@ -31,12 +31,6 @@ require 'quantity/systems/us'
 #     ludicrous_speed = speed_of_light * 1000
 #     ludicrous_speed.measures                #=> "meters per second"  #TODO: velocity, accleration ?
 #     ludicrous_speed.to_s                    #=> "299752458000 meters per second"
-#
-#     four_square_meters = 2.meters * 2.meters  
-#     four_square_meters.measures             #=> "meters squared" #TODO: area ?
-#     four_square_meteres.units               #=> "meters squared"
-#     # the magic only goes so far
-#     four_square_meteres * 2.meters.measures #=> "meters squared * meters"
 #
 # If the default to_s isn't what you want, you can buld it with 12.meters.value and 12.meters.units
 #
