@@ -1,7 +1,8 @@
 Quantity.rb: Units and Quantities for Ruby
 ==========================================
-Quantity.rb provides first-class supports for units and quantities in Ruby.
+Quantity.rb provides first-class support for units and quantities in Ruby.
 The right abstractions for true quantity representation and complex conversions.
+Hopefully this readme will be all you need, but [there are yardocs](http://quantity.rubyforge.org)
 
 ## Overview
     require 'quantity/all'
@@ -24,16 +25,16 @@ The right abstractions for true quantity representation and complex conversions.
     m_to_f.call(1)                                          #=> 3.28083... (or a Rational)
 
 Quantity.rb provides full-featured support for quantities, units, and
-dimensions in ruby.  Some terminology:
+dimensions in Ruby.  Some terminology:
 
   * Quantity: An amount of a unit, such as 12 meters.
   * Unit: An amount of a given dimension to be measured, such as 'meter'
   * Dimension: Some base quantity to be measured, such as 'length'
 
 Quantities perform complete mathematical operations over their units,
-including +, -, \*, /, \*\*, %, abs, divmod, <=>, and negation.  Units
+including `+`, `-`, `\*`, `/`, `\*`\*`, `%`, `abs`, `divmod`, `<=>`, and negation.  Units
 and the dimensions they measure are fully represented and support
-\* and /.
+`\*` and `/`.
 
 Quantity extends Numeric to allow easy creation of quantities, but there
 are direct interfaces to the library as well.
@@ -65,16 +66,16 @@ higher dimensions:
     1.milliliter / 1.mm                     #=> should be 1000.mm**2, but kaboom
 
 If you just work with units derived from the base dimensions, there aren't
-known bugs.  Please add a test if you find one.
+known bugs.  Please add a spec if you find one.
 
     1.mm**3 / 1.mm                          #=> 1 millimeter^2
 
 ### TODO
  * Lots more units are planned.
- * BigDecimal support a la rational.
+ * BigDecimal support a la Rational.
  * Supporting lambdas for unit values
  * BigDecimal/Rational compatible values for existing units
- * some DSL sugar for adding derived dimension units
+ * Some DSL sugar for adding derived dimension units
 
 ## Units
 Quantity.rb comes with a sizable collection of units, but still needs significant expansion.
@@ -83,11 +84,11 @@ A number of base unit sets exist:
     require 'quantity/all'                    #=> load everything.  uses US versions of foot, lb, etc
     require 'quantity/systems/si'             #=> load SI
     require 'quantity/systems/us'             #=> load US versions of foot, lb, etc
-    require 'quantity/systems/imperial'       #=> load british versions of foot, lb, etc
+    require 'quantity/systems/imperial'       #=> load British versions of foot, lb, etc
     require 'quantity/systems/information'    #=> bits, bytes, and all that
     require 'quantity/systems/enumerable'     #=> countable things--dozen, score, etc
 
-Note that us and imperial conflict with each other.  Loading both is unsupported.
+Note that US and Imperial conflict with each other.  Loading both is unsupported.
 
 Adding your own units is simple:
 
@@ -106,7 +107,7 @@ is referenced to millimeters, so each unit of length is defined in terms of them
     Quantity::Unit.add_unit :meter, :length, 1000
     Quantity::Unit.add_unit :millimeter, :length, 1, :mm
 
-Thus, the base unit for volume is 1 millimeter^3:
+Thus, the base unit for volume is 1 mm^3:
      volume = Quantity::Dimension.add_dimension length**3, :volume
      ml = Quantity::Dimension.add_unit :milliliter, :volume, 1000, :ml, :milliliters
      1.mm**3 * 1000 == 1.milliliter   #=> true
@@ -125,7 +126,7 @@ The full list of included base dimensions and their reference units:
     * :quantity     => :item    # for countable quantities.  units include 1.dozen, for example
     * :currency     => :dollar  # These are not really implemented yet
 
-To determine the base unit for a derived dimension, you can use quantity.rb itself:
+To determine the base unit for a derived dimension, you can use Quantity.rb itself:
 
     force = Quantity::Dimension.for(:force)
     newton = 1.meter * 1.kilogram / 1.second**2
@@ -139,7 +140,7 @@ Thus, a newton would be 1000 when added specifically:
 
 ## Dimensions
 A dimension is a measurable thing, often called a 'base quantity' in scientific literature,
-but quantity.rb specifically avoids that nomenclature, reserving 'quantity' for the class
+but Quantity.rb specifically avoids that nomenclature, reserving 'quantity' for the class
 representing a unit and a value.  As always, [wikipedia has the answers.](http://en.wikipedia.org/wiki/Physical_quantity)
 
 Dimensions are not very useful by themselves, but you can play with them
@@ -175,8 +176,8 @@ your application needs, and then bypass the rest of the library.
     m_to_f = 1.meter.measures.convert_proc(:feet)
     m_to_f.call(5)    # => 5 meters in feet
 
-This proc has been broken down into a single division; it no longer references
-any units, dimensions, or quantities.  It's hard to be faster in pure ruby.
+This Proc object has been broken down into a single division; it no longer references
+any units, dimensions, or quantities.  It's hard to be faster in pure Ruby.
 
 ### On precision and speed
 
@@ -198,7 +199,7 @@ is an order of magnitude slower.
 This is by no means the first unit conversion/quantity library for Ruby, but
 none of the existing ones scratched my itch just right.  My goal is that this will
 be the last one I (and you) need.  The abstractions go all the way down, and
-any concievable conversion or munging functionality should be buildable on top
+any conceivable conversion or munging functionality should be buildable on top
 of this.
 
 Inspiration comes from:
