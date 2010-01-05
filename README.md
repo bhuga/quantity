@@ -202,7 +202,7 @@ of this.
 Inspiration comes from:
 
   * [Quanty](http://narray.rubyforge.org/quanty/quanty-en.html)
-    Why oh why did they invalve yacc?
+    Why oh why did they involve yacc?
   * [Ruby Units](http://ruby-units.rubyforge.org/ruby-units/)
   * [Alchemist](http://github.com/toastyapps/alchemist)
 
