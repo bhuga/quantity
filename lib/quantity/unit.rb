@@ -115,6 +115,10 @@ class Quantity
         lambda do | from |
           from * Rational(@value, to.value) 
         end
+      elsif defined?(Rational) && (@value.is_a?(Rational)) && (to.value.is_a?(Rational))
+        lambda do | from |
+          from * @value / to.value
+        end
       else
         lambda do | from |
           from * (@value / to.value.to_f)
@@ -130,6 +134,8 @@ class Quantity
     # @return [Numeric]
     def value_for(reference_value)
       if defined?(Rational) && (reference_value.is_a?(Fixnum)) && (@value.is_a?(Fixnum))
+        Rational(reference_value, @value)
+      elsif defined?(Rational) && (reference_value.is_a?(Rational) || reference_value.is_a?(Fixnum)) && (@value.is_a?(Rational))
         reference_value / @value #Rational(reference_value, @value)
       else
         reference_value / @value.to_f

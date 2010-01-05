@@ -2,6 +2,7 @@ $:.unshift(File.expand_path(File.join(File.dirname(__FILE__), 'lib')))
 
 require 'quantity/dimension'
 require 'quantity/unit'
+require 'rational'
 
 
 describe Quantity::Unit do

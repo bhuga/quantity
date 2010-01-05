@@ -119,6 +119,8 @@ class Quantity
       [Quantity.new(other, @unit),self]
     elsif defined?(Rational) && (@value.is_a?(Fixnum)) && (other.is_a?(Fixnum))
       [Quantity.new(Rational(other), @unit), self] 
+    elsif defined?(Rational) && (other.is_a?(Rational))
+      [Quantity.new(other, @unit), self] 
     else
       [Quantity.new(other.to_f, @unit),Quantity.new(@value.to_f, @unit)]
     end
@@ -196,8 +198,10 @@ class Quantity
       ref = nil
       if defined?(Rational) && (@value.is_a?(Fixnum)) && (other.is_a?(Fixnum))
         ref = Rational(@reference_value,other.reference_value)
-      else
+      elsif defined?(Rational) && (@value.is_a?(Rational)) && (other.is_a?(Rational))
         ref = @reference_value / other.reference_value
+      else
+        ref = @reference_value / other.reference_value.to_f
       end
       Quantity.new({:unit => @unit / other.unit, :reference_value => ref})
     else

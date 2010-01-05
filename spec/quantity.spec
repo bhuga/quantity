@@ -3,6 +3,7 @@ $:.unshift(File.expand_path(File.join(File.dirname(__FILE__), 'lib')))
 require 'quantity'
 require 'quantity/systems/si'
 require 'quantity/systems/us'
+require 'rational'
 
 describe Quantity do
 
@@ -29,6 +30,7 @@ describe Quantity do
     1.meter.in_centimeters.should == 100
     50.centimeters.to_meters.should == 0.5
     10.meters.convert(:feet).should be_close 32.808399.feet, 10**-6
+    1.mm.to_m.should == 0.001
   end
 
   it "should convert from one type to another when not using the reference" do
