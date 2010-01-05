@@ -63,12 +63,8 @@ higher dimensions:
     1.liter / 1.second                      #=> should be 1 liter/second, but explodes
     1.liter.convert(:'mm^3') / 1.second     #=> 1000000.0 millimeter^3/second
     
-    1.milliliter / 1.mm                     #=> should be 1000.mm**2, but kaboom
-
 If you just work with units derived from the base dimensions, there aren't
 known bugs.  Please add a spec if you find one.
-
-    1.mm**3 / 1.mm                          #=> 1 millimeter^2
 
 ### TODO
  * Lots more units are planned.
