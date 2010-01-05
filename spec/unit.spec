@@ -4,7 +4,6 @@ require 'quantity/dimension'
 require 'quantity/unit'
 
 
-
 describe Quantity::Unit do
 
   before(:all) do
@@ -116,6 +115,8 @@ describe Quantity::Unit do
     lps = @liter / @second
     lps.unit.dimension.name.should == :'length^3/time'
     lps.unit.name.should == :'liter/second'
+    newton = @meter * @gram / @second**2
+    (newton / @second).name.should == 'meter*gram/second^3'
   end
 
   it "should convert complex units" do

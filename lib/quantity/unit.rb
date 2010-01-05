@@ -111,7 +111,7 @@ class Quantity
       unless (to.dimension == self.dimension)
         raise ArgumentError, "Cannot convert #{self.dimension} to #{to.dimension}"
       end
-      if defined?(Rational) && (!@value.is_a?(Rational)) && (!to.value.is_a?(Rational))
+      if defined?(Rational) && (@value.is_a?(Fixnum)) && (to.value.is_a?(Fixnum))
         lambda do | from |
           from * Rational(@value, to.value) 
         end
@@ -129,7 +129,7 @@ class Quantity
     # @param [Numeric] value
     # @return [Numeric]
     def value_for(reference_value)
-      if defined?(Rational) && (!reference_value.is_a?(Rational)) && (@value.is_a?(Rational))
+      if defined?(Rational) && (reference_value.is_a?(Fixnum)) && (@value.is_a?(Fixnum))
         reference_value / @value #Rational(reference_value, @value)
       else
         reference_value / @value.to_f

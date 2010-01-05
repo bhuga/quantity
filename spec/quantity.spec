@@ -56,6 +56,12 @@ describe Quantity do
     (2.5 + 5.meters).should == 7.5.meters
   end
 
+  it "should add and subtract with normal numbers" do
+    3.meters.should == 1.meter + 2
+    4.meters.should == 2 + 2.meter
+    6.4.meters.should == 4.4 + 2.meter
+  end
+
   it "should fail to add items of different types" do
     lambda { 12.meters + 24.picograms }.should raise_error ArgumentError
   end
@@ -112,6 +118,9 @@ describe Quantity do
   end
 
   it "should divide any items" do
+    newton = 1.meter * 1.kilogram / 1.second**2
+    newton_p_s3 = newton / 1.second
+    newton_p_s3.unit.name.should == 'meter*kilogram/second^3'
     (2.meters / 2.picograms).unit.dimension.string_form.should == "length/mass"
     (2.meters / 2.picograms).units.should == "meter/picogram"
     (10.meters / 2.picograms).should be_close 5, 10**-5
@@ -147,7 +156,7 @@ describe Quantity do
 
   it "should have a string representation" do
     2.meters.to_s.should == "2 meter"
-    (2.meters * 2.meters).to_s.should == "4.0 meter^2"
+    (2.meters * 2.meters).to_s.should == (defined?(Rational) ? "4 meter^2" : "4.0 meter^2")
   end
 
 end
