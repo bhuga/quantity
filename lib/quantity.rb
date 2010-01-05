@@ -123,7 +123,7 @@ class Quantity
   def coerce(other)
     if other.class == @value.class
       [Quantity.new(other, @unit),self]
-    elsif defined? Rational &&  @value.is_a?(Fixnum) && other.is_a?(Fixnum)
+    elsif defined?(Rational) && (!@value.is_a?(Rational)) && (!other.is_a?(Rational))
       [Quantity.new(Rational(other), @unit), self] 
     else
       [Quantity.new(other.to_f, @unit),Quantity.new(@value.to_f, @unit)]
@@ -200,7 +200,7 @@ class Quantity
       Quantity.new(@value / other, @unit)
     elsif(other.is_a?(Quantity))
       ref = nil
-      if defined? Rational && defined? other.reference_value.gcd
+      if defined?(Rational) && (!@value.is_a?(Rational)) && (!other.is_a?(Rational))
         ref = Rational(@reference_value,other.reference_value)
       else
         ref = @reference_value / other.reference_value
