@@ -32,9 +32,8 @@ dimensions in Ruby.  Some terminology:
   * Dimension: Some base quantity to be measured, such as 'length'
 
 Quantities perform complete mathematical operations over their units,
-including `+`, `-`, `\*`, `/`, `\*`\*`, `%`, `abs`, `divmod`, `<=>`, and negation.  Units
-and the dimensions they measure are fully represented and support
-`\*` and `/`.
+including `+`, `-`, `\*`, `/`, `\*\*`, `%`, `abs`, `divmod`, `<=>`, and negation.  Units
+and the dimensions they measure are fully represented and support `\*` and `/`.
 
 Quantity extends Numeric to allow easy creation of quantities, but there
 are direct interfaces to the library as well.
