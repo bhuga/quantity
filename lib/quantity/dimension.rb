@@ -120,6 +120,13 @@ class Quantity
       @name.to_s
     end
 
+    # The reduced form of a named complex unit
+    # @example
+    #   Quantity::Dimension.for(:force).reduced_name # => :'mass*length/time^2'
+    def reduced_name
+      string_form.to_sym
+    end
+
     # Dimensional multiplication
     # @param [Dimension] other
     # @return [Dimension] 
