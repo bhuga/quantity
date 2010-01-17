@@ -3,3 +3,6 @@
 .yardoc
 pkg
 tmp
+coverage
+*.gem
+
