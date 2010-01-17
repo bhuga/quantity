@@ -44,7 +44,7 @@ describe Quantity::Dimension do
     end
   end
 
-  context "use" do
+  context "use case" do
 
     before :all do
       Quantity::Dimension.__reset!
@@ -91,7 +91,34 @@ describe Quantity::Dimension do
       @force.reduced_name.should == :'length*mass/time^2'
     end
 
-    ## this is going to be removed for something else, but unit still uses it, so we test it.
+    it "provides a hash form for simple dimensions" do
+      @length.hash.should == { :length => 1 }
+    end
+
+    it "provides a hash form for unnamed dimensions" do
+      lm = @length * @mass
+      lm.hash.should == { :length => 1, :mass => 1 }
+    end
+
+    it "provides a hash form for named dimensions" do
+      @area.to_hash.should == { :area => 1 }
+    end
+
+    it "provides a reduced hash form" do
+      @length.to_hash.should == @length.reduced_hash
+      @area.reduced.to_hash.should == { :length => 2 }
+    end
+
+    it "provides a hash form with negative components" do
+      @force.to_hash.should = { :length => 1, :mass => -1 , :time => -2 }
+    end
+
+    it "provides a reduced form" do
+      @area.name.should == :area
+      @area.reduce.name.should == :'length^2'
+    end
+
+    ## this is going to be removed for hashes, but unit still uses it, so we test it.
     it "should track numerators and denominators" do
       @length.numerators.first.dimension.should == :length
       @length.numerators.first.power.should == 1
@@ -102,7 +129,8 @@ describe Quantity::Dimension do
       @force.denominators.first.dimension.should == :time
       @force.denominators.first.power.should == 2
     end
-  
+ 
+    # This is a bad interface and will be removed.
     it "should provide a vaguely parsable string format" do
       component = Quantity::Dimension::DimensionComponent.new(:length,3)
       component2 = Quantity::Dimension::DimensionComponent.new(:length,2)
@@ -164,7 +192,7 @@ describe Quantity::Dimension do
 
       it "multiplies named complex dimensions with each other" do
         l4 = @area * @area
-        l4.name.should == :'area*area'
+        l4.name.should == :'area^2'
       end
 
       it "performs exponentiation" do
@@ -184,20 +212,19 @@ describe Quantity::Dimension do
     # and derived.  either is fine unless we expect different semantics
     context "division" do
 
-      context "base dimension dividends" do
-        it "divides base dimensions by each other" do
+      context "with base dividends" do
+
+        it "supports base divisors" do
           speed = @length / @time
           speed.name.should == :'length/time'
         end
   
-        # This one can be supported if the dimension has no denominator component.
-        # it comes up a lot, i.e. miles per gallon
-        it "divides base dimensions by complex dimensions" do
+        it "supports complex divisors" do
           ta = @time / @area
           ta.name.should == :'time/area'
         end
   
-        it "divides base dimensions by complex dimensions with a denominator" do
+        it "supports complex divisors with a negative exponent" do
           mt = @mass / @time
           lmt = @length / mt
           lmt.name.should == :'length*time/mass'
@@ -208,63 +235,93 @@ describe Quantity::Dimension do
         # reciprocal.  It's confusing for the internal representation.  I'm also
         # hard-pressed to find examples of this being useful, i.e. when's it
         # useful to have something divided by force?  length per force?
-        it "only provides reduced form support when dividing by a named dimension with a denominator component" do
+        it "supports reduced form with a named complex divisor " do
           ma = @mass / @accel
           ma.name.should == :'mass*time^2/length'
         end
+
+        it "supports named form with a named complex divisor" do
+          ma = @mass / @accel
+          ma.name.should == :'mass/acceleration'
+        end
+
+        it "supports a nil numerator component" do
+          speed = @mass / @time
+          t_neg_1 = speed / @mass 
+          t_neg_1.name.should == :'1/time'
+          t_neg_1.reduced_hash.should == { :time => -1 }
+        end
+
       end
 
-      context "complex dimension dividends" do
-        it "divides complex dimensions by base dimensions" do
+      context "with complex dividends" do
+        it "supports base dimension divisors" do
           am = @area / @mass
           am.reduced_name.should == :'length^2/mass'
           am.name.should == :'area/mass'
         end
   
-        it "divides complex dimensions by complex dimensions" do
+        it "supports complex divisors" do
           am = @area / (@mass * @mass)
           am.reduced_name.should == :'length^2/mass^2'
           am.name.should == :'area/mass^2'
         end
   
-        it "divides complex dimensions by complex dimensions with a denominator component" do
+        it "supports divisors with a negative exponent" do
           result = (@mass * @mass) / (@length / @time)
           result.name.should == :'mass^2*time/length'
         end
-  
-        it "only provides reduced form support for dividing by a named dimension with a denominator component" do
+        
+        it "supports reduced form for divisors with a negative exponent" do
           result = (@mass * @mass) / @accel
           result.name.should == :'mass^2*time^2/length'
         end
       end
 
-      context "complex dimension with a denominator component dividends" do
-        it "only provides reduced form support for base dimension divisor" do
+      context "with dividends with negative exponents" do
+        it "supports reduced form for base divisor" do
           jerk = @accel / @time
-          jerk.name.should == :'length/time^3'
+          jerk.reduced_name.should == :'length/time^3'
         end
 
-        it "only provides reduced form support for complex dimension divisors" do
+        it "supports named form for base divisor" do
+          jerk = @accel / @time
+          jerk.name.should == :'acceleration/time'
+        end
+
+        it "supports reduced form for complex divisors" do
           af = @accel / (@mass * @mass)
-          af.name.should == :'length/mass^2*time^2'
+          af.reduced_name.should == :'length/mass^2*time^2'
         end
 
-        it "only provides reduced form support for complex dimension with a denominator component divisors" do
+        it "supports named form for complex divisors" do
+          af = @accel / (@mass * @mass)
+          af.name.should == :'acceleration/mass^2'
+        end
+
+        it "only supports reduced form for a subdimension divisor" do
           fa = @force / @accel
-          fa.name.should == :'mass'
+          fa.reduced_name.should == :'force/acceleration'
+          fa.reduced_name.should == :'mass'
+        end
+
+        it "supports named form for complex divisors with negative exponents" do
+          tm = @time / @mass
+          fa = @force / tm
+          fa.name.should == :'force*mass/time'
+        end
+
+        it "supports reduced form for a complex divisors with negative exponents" do
+          tm = @time / @mass
+          fa = @force / tm
+          fa.reduced_name.should == :'length*mass^2/time^3'
         end
       end
 
-      context "invalid divisions" do
-        
-        # Quantity.rb does not support the concept of inverse units, such as
-        # mass^-1.  Inverse units, in particlar 1/second, are used in many
-        # cases, including some SI units.  Example units are hertz (hz) and
-        # radiation dose (Bequerels, bq).  In quantity.rb, they are specified
-        # as the dimension quantity/time, and not '1/time'.  
-        it "will not create inverse dimensions" do
-          # @accel / @force == length/time^2 * time^2/length*mass == 1/mass
-          lambda {af = @accel / @force}.should raise_error TypeError
+      context "as negative exponentiation" do
+        it "supports negative exponents" do
+          length_neg_2 = @length**-2
+          length_neg_2.name.should == :'1/length^2'
         end
       end
 
