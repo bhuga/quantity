@@ -76,6 +76,12 @@ class Quantity
       self.class_eval(&block)
     end
 
+    # Reset the world.  Useful in testing.
+    # @private
+    def self.__reset!
+      @@units = {}
+    end
+
     ### Instance-level methods/vars
     attr_reader :name, :value, :dimension, :aliases
     
@@ -83,6 +89,11 @@ class Quantity
     # @return [[Symbol String]]
     def names
       [@name] + @aliases
+    end
+
+    # A reduced form of this unit
+    def reduced_name
+      to_string_form.to_sym
     end
 
     # Can this unit be converted into the target unit?
@@ -150,7 +161,8 @@ class Quantity
     end
 
     def inspect
-      "<Unit #{@name} (#{@object_id}), value #{@value}, dimension #{@dimension}>"
+      sprintf('#<%s:0x%s @name=%s @value=%s @dimension=%s>', self.class.name,
+                self.__id__.to_s(16), @name.inspect, @value.inspect, @dimension.inspect)
     end
 
     def <=>(other)
@@ -311,10 +323,10 @@ class Quantity
       string
     end
 
-    # Reset the world.  Useful in testing.
-    # @private
-    def self.__reset!
-      @@units = {}
+    # A reduced form of this unit
+    def reduced_name
+      string_form.to_sym
     end
+
   end
 end

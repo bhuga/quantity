@@ -185,7 +185,7 @@ class Quantity
     #
     # @return [String]
     def inspect
-      sprintf("#<%s:%#0x %s (%s)>", self.class.name, object_id, string_form, @name)
+      sprintf("#<%s:0x%s @name=%s reduced_name=%s>", self.class.name, self.__id__.to_s(16), @name, reduced_name)
     end
 
 
