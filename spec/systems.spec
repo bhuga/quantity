@@ -1,4 +1,7 @@
+require 'quantity'
 
+# This is by no means comprehensive, just to make sure that we are loading
+# units based on the planned require x/y/z syntax.
 
 describe Quantity::Dimension do
   it "should have the base dimensional units available" do
@@ -21,8 +24,8 @@ describe Quantity::Unit do
   end
 
   it "should blow up the world" do
-    #Quantity::Unit.__reset!
-    #Quantity::Dimension.__reset!
+    Quantity::Unit.__reset!
+    Quantity::Dimension.__reset!
   end
 
 end
