@@ -193,10 +193,10 @@ describe Quantity::Unit do
         sqft.value.should == @foot.value**2
       end
 
-      it "defaults to the first unit when multiplying units of the same dimension" do
+      it "defaults to the second unit when multiplying units of the same dimension" do
         sqft = @meter * @foot
-        sqft.name.should == :'meter^2'
-        sqft.value.should == 1000**2
+        sqft.name.should == :'foot^2'
+        sqft.value.should be_close 92903.04, 10**-5
       end
 
     end
