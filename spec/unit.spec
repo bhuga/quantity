@@ -2,7 +2,6 @@ $:.unshift(File.expand_path(File.join(File.dirname(__FILE__), 'lib')))
 
 require 'quantity/dimension'
 require 'quantity/unit'
-require 'rational'
 
 
 describe Quantity::Unit do
@@ -11,6 +10,7 @@ describe Quantity::Unit do
   
     before(:all) do
       Quantity::Dimension.__reset!
+      Quantity::Unit.__reset!
       length = Quantity::Dimension.add_dimension :length, :width
       Quantity::Dimension.add_dimension :'length^2', :area
       Quantity::Dimension.add_dimension :'length/time^2', :acceleration
@@ -110,6 +110,7 @@ describe Quantity::Unit do
   context "use cases" do
     before(:all) do
       Quantity::Dimension.__reset!
+      Quantity::Unit.__reset!
       @length = Quantity::Dimension.add_dimension :length, :width
       @area = Quantity::Dimension.add_dimension :'length^2', :area
       @accel = Quantity::Dimension.add_dimension :'length/time^2', :acceleration
@@ -148,6 +149,11 @@ describe Quantity::Unit do
       @gram = Quantity::Unit.for(:gram)
       @liter = Quantity::Unit.for(:liter)
       @mps = Quantity::Unit.for(:mps)
+    end
+
+    after(:all) do
+      Quantity::Dimension.__reset!
+      Quantity::Unit.__reset!
     end
 
     context "informational" do
