@@ -7,138 +7,264 @@ require 'rational'
 
 describe Quantity::Unit do
 
-  before(:all) do
-    class Length < Quantity::Dimension ; end
-    class Area < Quantity::Dimension ; end
-    class Acceleration < Quantity::Dimension ; end
-    length = Length.add_dimension :length, :width
-    Area.add_dimension :'length^2'
-    Acceleration.add_dimension :'length/time^2'
-    Quantity::Dimension.add_dimension :mass
-    Quantity::Dimension.add_dimension :time
-    Quantity::Dimension.add_dimension :'mass*length/time^2', :force
-    Quantity::Dimension.add_dimension length**3, :volume
+  context "definition" do
+  
+    before(:all) do
+      Quantity::Dimension.__reset!
+      length = Quantity::Dimension.add_dimension :length, :width
+      Quantity::Dimension.add_dimension :'length^2', :area
+      Quantity::Dimension.add_dimension :'length/time^2', :acceleration
+      Quantity::Dimension.add_dimension :mass
+      Quantity::Dimension.add_dimension :time
+      Quantity::Dimension.add_dimension :'mass*length/time^2', :force
+      Quantity::Dimension.add_dimension length**3, :volume
+    end
+    
+    before(:each) do
+      @length = Quantity::Dimension.for(:length)
+      @mass = Quantity::Dimension.for(:mass)
+      @area = Quantity::Dimension.for(:area)
+      @accel = Quantity::Dimension.for(:acceleration)
+      @force = Quantity::Dimension.for(:force)
+      @time = Quantity::Dimension.for(:time)
+      @volume = Quantity::Dimension.for(:volume)
+  
+      @meter = Quantity::Unit.for(:meter)
+      @mm = Quantity::Unit.for(:mm)
+      @inch = Quantity::Unit.for(:inch)
+      @foot = Quantity::Unit.for(:foot)
+      @second = Quantity::Unit.for(:second)
+      @gram = Quantity::Unit.for(:gram)
+      @liter = Quantity::Unit.for(:liter)
+    end
+ 
+    after(:all) do
+      Quantity::Dimension.__reset!
+      Quantity::Unit.__reset!
+    end
+
+    it "supports adding basic units" do
+      Quantity::Unit.add_unit :meter, @length, 1000, :meters, :m
+      meters = Quantity::Unit.for :meter 
+      meters.dimension.should == @length
+      meters.name.should == :meter
+      meters.value.should == 1000
+    end
+
+    it "supports adding units for complex dimensions" do
+      Quantity::Unit.add_unit :millimeter, @length, 1, :mm, :millimeters
+      Quantity::Unit.add_unit :second, @time, 1000, :seconds, :s
+      Quantity::Unit.add_unit :foot, @length, 304.8, :feet
+      Quantity::Unit.add_unit :inch, @length, 25.4, :inches
+      Quantity::Unit.add_unit :gram, @mass, 1000, :grams
+      Quantity::Unit.add_unit :nanosecond, @time, 10**-6, :nanoseconds
+      Quantity::Unit.add_unit :picogram, @mass, 10**-9, :picograms
+      Quantity::Unit.add_unit :liter, @volume, 10**6, :liters, :l
+      Quantity::Unit.add_unit :mps, @accel, 10**12, :meterspersecond
+      mps = Quantity::Unit.for :mps
+      mps.name.should == :mps
+      mps.value.should == 10**12
+    end
+  
+    it "supports unit aliases" do
+      m1 = Quantity::Unit.for(:meter)
+      m2 = Quantity::Unit.for(:meters)
+      m3 = Quantity::Unit.for(:m)
+      m1.name.should == :meter
+      m2.name.should == :meter
+      m3.name.should == :meter
+    end
+
+    it "interns units" do
+      m1 = Quantity::Unit.for(:meter)
+      m2 = Quantity::Unit.for(:meters)
+      m1.should equal m2
+    end
+
+    it "constructs units from an options hash" do
+      sqft = Quantity::Unit.new({ :name => :sqft, :dimension => @area, :units => { @length => @foot}})
+      sqft.name.should == :sqft
+      sqft.dimension.should == @area
+      sqft.value.should be_close @foot.value**2, 10**-5
+      sqft.string_form.should == 'foot^2'
+    end
+
+    it "constructs complex units from an options hash" do
+      area_p_sec = @area / @time
+      f2ps = Quantity::Unit.new({:name => :f2ps, :dimension => area_p_sec, 
+                                 :units => { @length => @foot, @time => @second }})
+      f2ps.name.should == :f2ps
+      f2ps.value.should be_close((@foot.value**2)/@second.value, 10**-5)
+      f2ps.string_form.should == 'foot^2/second'
+      f2ps.dimension.string_form.should == 'length^2/time'
+      f2ps.value.should be_close 92.90304, 10**-5
+    end
+  
+    it "allows a full reset" do
+      Quantity::Unit.__reset!
+      nil.should == Quantity::Unit.for(:meter)
+    end
+  
   end
 
-  before(:each) do
-    @length = Quantity::Dimension.for(:length)
-    @mass = Quantity::Dimension.for(:mass)
-    @area = Quantity::Dimension.for(:area)
-    @accel = Quantity::Dimension.for(:acceleration)
-    @force = Quantity::Dimension.for(:force)
-    @time = Quantity::Dimension.for(:time)
-    @volume = Quantity::Dimension.for(:volume)
+  context "use cases" do
+    before(:all) do
+      Quantity::Dimension.__reset!
+      @length = Quantity::Dimension.add_dimension :length, :width
+      @area = Quantity::Dimension.add_dimension :'length^2', :area
+      @accel = Quantity::Dimension.add_dimension :'length/time^2', :acceleration
+      @mass = Quantity::Dimension.add_dimension :mass
+      @time = Quantity::Dimension.add_dimension :time
+      @force = Quantity::Dimension.add_dimension :'mass*length/time^2', :force
+      @volume = Quantity::Dimension.add_dimension @length**3, :volume
 
-    @meter = Quantity::Unit.for(:meter)
-    @mm = Quantity::Unit.for(:mm)
-    @inch = Quantity::Unit.for(:inch)
-    @foot = Quantity::Unit.for(:foot)
-    @second = Quantity::Unit.for(:second)
-    @gram = Quantity::Unit.for(:gram)
-    @liter = Quantity::Unit.for(:liter)
+      Quantity::Unit.__reset!
+      Quantity::Unit.add_unit :meter, @length, 1000, :meters, :m
+      Quantity::Unit.add_unit :millimeter, @length, 1, :mm, :millimeters
+      Quantity::Unit.add_unit :second, @time, 1000, :seconds, :s
+      Quantity::Unit.add_unit :foot, @length, 304.8, :feet
+      Quantity::Unit.add_unit :inch, @length, 25.4, :inches
+      Quantity::Unit.add_unit :gram, @mass, 1000, :grams
+      Quantity::Unit.add_unit :nanosecond, @time, 10**-6, :nanoseconds
+      Quantity::Unit.add_unit :picogram, @mass, 10**-9, :picograms
+      Quantity::Unit.add_unit :liter, @volume, 10**6, :liters, :l
+      Quantity::Unit.add_unit :mps, @accel, 10**12, :meterspersecond
+    end
+    
+    before(:each) do
+      @length = Quantity::Dimension.for(:length)
+      @mass = Quantity::Dimension.for(:mass)
+      @area = Quantity::Dimension.for(:area)
+      @accel = Quantity::Dimension.for(:acceleration)
+      @force = Quantity::Dimension.for(:force)
+      @time = Quantity::Dimension.for(:time)
+      @volume = Quantity::Dimension.for(:volume)
+  
+      @meter = Quantity::Unit.for(:meter)
+      @mm = Quantity::Unit.for(:mm)
+      @inch = Quantity::Unit.for(:inch)
+      @foot = Quantity::Unit.for(:foot)
+      @second = Quantity::Unit.for(:second)
+      @gram = Quantity::Unit.for(:gram)
+      @liter = Quantity::Unit.for(:liter)
+      @mps = Quantity::Unit.for(:mps)
+    end
+
+    context "informational" do
+      it "has a symbol name" do
+        @second.name.should == :second
+      end
+
+      it "has a symbol name for complex units" do
+        @mps.name.should == :mps
+      end
+
+      it "has a reduced form name" do
+        @mps.name.should == :mps
+      end
+
+      it "has a reduced form name for complex units" do
+        @mps.reduced_name.should == :'meters/second^2'
+      end
+    end
+
+    context "multiplication" do
+
+      it "supports basic units" do
+        sqft = @foot * @foot
+        sqft.name.should == :'foot^2'
+      end
+
+      it "supports complex units" do
+        sqft = @foot * @foot
+        cubeft = sqft * @foot
+        cubeft.name.should == :'foot^3'
+      end
+
+      it "supports units of different dimensions" do
+        s_f3 = @second * (@foot * @foot * @foot)
+        s_f3.name.should == :'foot^3*second'
+        s_f3.value.should == @foot.value**3 / @second.value
+      end
+    
+      it "supports different units of the same dimension" do
+        sqft = @foot * @meter
+        sqft.name.should == :'foot^2'
+        sqft.value.should == @foot.value**2
+      end
+
+      it "defaults to the first unit when multiplying units of the same dimension" do
+        sqft = @meter * @foot
+        sqft.name.should == :'meter^2'
+        sqft.value.should == 1000**2
+      end
+
+    end
+
+    context "division" do 
+
+      it "supports basic units" do
+        m_s = @meter / @second
+        m_s.name.should == :'meter/second'
+      end
+
+      it "supports mixed units" do
+        result = @meter * @gram / @second
+        result.name.should == :'meter*gram/second'
+      end
+
+      it "supports mixed unit divisors" do
+        result = @meter / (@gram * @second)
+        result.name.should == :'meter/gram*second'
+        result.value.should == @meter.value / (@gram.value*@second.value)
+      end
+
+      it "simplifies results" do
+        result = (@meter * @second) / @second
+        result.name.should == :meter
+        result.value.should == @meter.value
+      end
+
+      it "supports named complex dimensions" do
+        lpm = @liter / @meter
+        lpm.name.should == :'liter/meter'
+        lpm.reduced_name.should == :'mm^2'
+        lpm.value.should == @liter.value / @meter.value
+      end
+
+    end
+
+    context "exponentiation" do
+      it "supports positive exponents" do
+        (@foot**2).should == (@foot * @foot)
+      end
+
+      it "supports negative exponents" do
+        (@foot**-1).name.should == :'1/foot'
+      end
+    end
+
+    context "conversions" do
+
+      it "converts basic units" do
+        @foot.convert(:meter).should == @meter
+      end
+
+      it "converts the portion of a given complex unit to a target unit" do
+        @mps.convert(:foot).should == @foot / @second
+        @liter.convert(:mm).should == @mm**3
+      end
+
+      it "won't convert to a higher-order unit unless it has an exact matching dimension" do
+        lambda { @liter.convert(:'mm^2') }.should raise_error TypeError
+      end
+      
+      it "breaks down named complex units" do
+        @liter.convert(:mm).should == @mm**3
+      end
+
+    end
+
   end
-
-  it "should respond correctly to the DSL and add units" do
-    Quantity::Unit.add_unit :meter, @length, 1000, :meters, :m
-    Quantity::Unit.add_unit :millimeter, @length, 1, :mm, :millimeters
-    Quantity::Unit.add_unit :second, @time, 1000, :seconds, :s
-    Quantity::Unit.add_unit :foot, @length, 304.8, :feet
-    Quantity::Unit.add_unit :inch, @length, 25.4, :inches
-    Quantity::Unit.add_unit :gram, @mass, 1000, :grams
-    Quantity::Unit.add_unit :nanosecond, @time, 10**-6, :nanoseconds
-    Quantity::Unit.add_unit :picogram, @mass, 10**-9, :picograms
-    Quantity::Unit.add_unit :mps, @accel, 10**12, :meterspersecond
-    Quantity::Unit.add_unit :liter, @volume, 10**6, :liters, :l
-    meters = Quantity::Unit.for :meter 
-    meters.dimension.should == @length
-    meters.name.should == :meter
-    meters.value.should == 1000
-    mps = Quantity::Unit.for :mps
-    mps.name.should == :mps
-    mps.value.should == 10**12
-  end
-
-  it "should know its aliases" do
-    m1 = Quantity::Unit.for(:meter)
-    m2 = Quantity::Unit.for(:meters)
-    m3 = Quantity::Unit.for(:m)
-    m1.should equal(m2)
-    m1.should equal(m3)
-  end
-
-  it "should support complex units" do
-    sqft = Quantity::Unit.new({ :name => :sqft, :dimension => @area, :units => { @length => @foot}})
-    sqft.name.should == :sqft
-    sqft.dimension.should == @area
-    sqft.dimension.string_form.should == 'length^2'
-    sqft.string_form.should == 'foot^2'
-    sqft.value.should be_close 92903.04, 10**-5
-    area_p_sec = @area / @time
-    f2ps = Quantity::Unit.new({:name => :f2ps, :dimension => area_p_sec, 
-                               :units => { @length => @foot, @time => @second }})
-    f2ps.name.should == :f2ps
-    f2ps.string_form.should == 'foot^2/second'
-    f2ps.dimension.string_form.should == 'length^2/time'
-    f2ps.value.should be_close 92.90304, 10**-5
-  end
-
-#  should it really, though?
-#  it "should generate reference units for compound dimensions" do
-#    length = Quantity::Dimension.for(:length)
-#    volume = length * length * length
-#    cubicmm = Quantity::Unit::Compound.reference_unit_for(volume)
-#    cubicmm.value.should == 1
-#    cubicmm.string_form.should == 'millimeter^3'
-#    cubicmm.dimension.should == volume
-#  end
-
-  it "should multiply units" do
-    sqft = @foot * @foot
-    sqft.name.should == 'foot^2'
-    #sqft.dimension.reference.should equal(Quantity::Unit.for('millimeter^2'))
-    cubeft = sqft * @foot
-    cubeft.name.should == 'foot^3'
-    s_f3 = @second * cubeft
-    s_f3.name.should == 'foot^3*second'
-    #cubeft.dimension.reference.should equal(Quantity::Unit.for('millimeter^3'))
-  end
-
-  it "should divide units" do
-    m_s = @meter / @second
-    m_s.name.should == 'meter/second'
-    accel_dim = @length / (@time**2)
-    accel = m_s / @second
-    accel.dimension.should equal(accel_dim)
-    accel.name.should == 'meter/second^2'
-    (accel * @second).should equal(m_s)
-    x = (@mm**3) / @second
-    x.value.should == 1 / 1000.0
-    lps = @liter / @second
-    lps.unit.dimension.name.should == :'length^3/time'
-    lps.unit.name.should == :'liter/second'
-    newton = @meter * @gram / @second**2
-    (newton / @second).name.should == 'meter*gram/second^3'
-  end
-
-  it "should convert complex units" do
-    foot = Quantity::Unit.for(:foot)
-    sqft = foot * foot
-    sqmt = sqft.convert(:meter)
-    sqmt.name.should == 'meter^2'
-    foot_grams_of_force = @gram * @foot / (@second**2)
-    lambda {foot_grams_of_force.convert(:'feet^2')}.should raise_error ArgumentError
-    lambda {foot_grams_of_force.convert('feet^2')}.should raise_error ArgumentError
-    foot_grams_of_force.convert('feet*picograms/nanoseconds^2').string_form.should == 'foot*picogram/nanosecond^2'
-    foot_grams_of_force.convert(:'feet*picograms/nanoseconds^2').string_form.should == 'foot*picogram/nanosecond^2'
-    foot_grams_of_force.convert(:meter).name.should == 'meter*gram/second^2'
-  end
-
-  it "should reset the world" do
-    Quantity::Unit.__reset!
-    Quantity::Dimension.__reset!
-    nil.should == Quantity::Unit.for(:meter)
-    nil.should == Quantity::Dimension.for(:time)
-  end
-
 
 end
