@@ -1,3 +1,5 @@
+.rvmrc
+.bundle
 .DS_Store
 .tmp
 .yardoc
@@ -5,4 +7,3 @@ pkg
 tmp
 coverage
 *.gem
-
