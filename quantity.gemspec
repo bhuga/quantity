@@ -21,13 +21,16 @@ Things like 1.meter / 1.second == 1 meter/second.
     s.specification_version = 3
     
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
+      s.add_development_dependency(%q<rake>, ["= 0.8.7"])
       s.add_development_dependency(%q<rspec>, ["= 1.2.9"])
       s.add_development_dependency(%q<yard>, ["= 0.5.2"])
     else
+      s.add_dependency(%q<rake>, ["= 0.8.7"])
       s.add_dependency(%q<rspec>, ["= 1.2.9"])
       s.add_dependency(%q<yard>, ["= 0.5.2"])
     end
   else
+    s.add_dependency(%q<rake>, ["= 0.8.7"])
     s.add_dependency(%q<rspec>, ["= 1.2.9"])
     s.add_dependency(%q<yard>, ["= 0.5.2"])
   end
