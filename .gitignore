@@ -1,5 +1,6 @@
 .rvmrc
 .bundle
+Gemfile.lock
 .DS_Store
 .tmp
 .yardoc
