@@ -360,6 +360,16 @@ class Quantity
       end
     end
 
+    def respond_to?(method)
+      if method.to_s =~ /(to_|in_)(.*)/
+        if (Unit.is_unit?($2.to_sym))
+          return true
+        end
+      end
+      
+      super
+    end
+
 end
 
 # @private

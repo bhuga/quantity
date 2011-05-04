@@ -64,7 +64,12 @@ describe Quantity do
     it "reduces derived units" do
       ((1.meter / 1.second) * 1.second).should == 1.meter
     end
-  
+    
+    it "respond_to? conversion methods" do
+      1.meter.should respond_to(:in_centimeters)
+      1.meter.should respond_to(:to_centimeters)
+    end
+    
   end
 
   context "math operations" do
