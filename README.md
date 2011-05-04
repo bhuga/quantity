@@ -209,7 +209,7 @@ Authors
 
 * [Ben Lavender](mailto:blavender@gmail.com) - <http://bhuga.net/>
 * [Arto Bendiken](mailto:arto.bendiken@gmail.com) - <http://ar.to/>
-
+* [Matt Todd](mtodd@highgroove.com) - <http://maraby.org/>
 License
 -------
 
