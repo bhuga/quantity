@@ -294,7 +294,7 @@ class Quantity
       @dimension.numerators.each do | component |
         component.power.times do 
           # we might have a unit for a compound dimension, such as liters for length^3.
-          value *= @units[Quantity::Dimension.for(component.dimension)].value
+          value *= @units[Quantity::Dimension.for(component.dimension)].value if @units[Quantity::Dimension.for(component.dimension)]
         end
       end
       @dimension.denominators.each do | component |
