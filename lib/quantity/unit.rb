@@ -305,6 +305,12 @@ class Quantity
       @value = value
     end
 
+
+    def compatible_with?(other)
+      other.respond_to?(:dimension) && dimension.compatible_with?(other.dimension)
+    end
+
+
     # A vaguely human-readable form for this unit
     # @return [String]
     def string_form
