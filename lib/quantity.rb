@@ -73,12 +73,12 @@ class Quantity
         @reference_value = value[:reference_value] || (value[:value] * @unit.value)
         @value = @unit.value_for(@reference_value) #dimension.reference.convert_proc(@unit).call(@reference_value)
         #@value = @unit.convert_proc(@unit).call(@reference_value)
-      when Numeric
+      when Numeric, String
         @unit = Unit.for(unit)
         if @unit.nil?
           @unit = Unit.from_string_form(unit)
         end
-        @value = value
+        @value = value.is_a?(Numeric) ? value : value.to_f
         @reference_value = value * @unit.value 
     end
   end
@@ -133,10 +133,10 @@ class Quantity
   def +(other)
     if (other.is_a?(Numeric))
       Quantity.new(@value + other, @unit)
-    elsif(other.is_a?(Quantity) && @unit.dimension == other.unit.dimension)
+    elsif compatible_with?(other)
       Quantity.new({:unit => @unit,:reference_value => @reference_value + other.reference_value})
     else
-      raise ArgumentError,"Cannot add #{self} to #{other}"
+      raise ArgumentError,"Cannot add #{self} (#{@unit.dimension}) to #{other} (#{other.class}" + (other.is_a?(Quantity) ? "-#{other.unit.dimension})" : ')')
     end
   end
 
@@ -147,10 +147,10 @@ class Quantity
   def -(other)
     if (other.is_a?(Numeric))
       Quantity.new(@value - other, @unit)
-    elsif(other.is_a?(Quantity) && @unit.dimension == other.unit.dimension)
+    elsif compatible_with?(other)
       Quantity.new({:unit => @unit,:reference_value => @reference_value - other.reference_value})
     else
-      raise ArgumentError, "Cannot subtract #{other} from #{self}"
+      raise ArgumentError, "Cannot subtract #{other} (#{other.class}) from #{self} (#{@unit.dimension})"
     end
   end
 
@@ -161,7 +161,7 @@ class Quantity
   def <=>(other)
     if (other.is_a?(Numeric))
       @value <=> other
-    elsif(other.is_a?(Quantity) && measures == other.measures)
+    elsif compatible_with?(other)
       @reference_value <=> other.reference_value
     else
       nil
@@ -277,6 +277,11 @@ class Quantity
   # @return [Float]
   def to_f
     @value.to_f
+  end
+
+  def compatible_with?(other)
+    return false if unit.nil?
+    other.respond_to?(:unit) && unit.compatible_with?(other.unit)
   end
 
   # Round this value to the nearest integer

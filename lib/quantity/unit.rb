@@ -294,7 +294,7 @@ class Quantity
       @dimension.numerators.each do | component |
         component.power.times do 
           # we might have a unit for a compound dimension, such as liters for length^3.
-          value *= @units[Quantity::Dimension.for(component.dimension)].value
+          value *= @units[Quantity::Dimension.for(component.dimension)].value if @units[Quantity::Dimension.for(component.dimension)]
         end
       end
       @dimension.denominators.each do | component |
@@ -304,6 +304,12 @@ class Quantity
       end
       @value = value
     end
+
+
+    def compatible_with?(other)
+      other.respond_to?(:dimension) && dimension.compatible_with?(other.dimension)
+    end
+
 
     # A vaguely human-readable form for this unit
     # @return [String]

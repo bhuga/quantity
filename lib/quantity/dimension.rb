@@ -178,6 +178,12 @@ class Quantity
       end
     end
 
+
+    def compatible_with?(other)
+      self === other || (other.respond_to?(:name) && name == other.name)
+    end
+
+
     # Returns a developer-friendly representation of this value.
     #
     # The string will be of the format `#<Quantity::Dimension::0x12345678(...)>`,
