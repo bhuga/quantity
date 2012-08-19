@@ -66,7 +66,7 @@ class Quantity
   #   @option options [Symbol Unit] :unit Units
   #   @return [Quantity]
   #
-  def initialize(value = nil, unit = nil )
+  def initialize(value, unit = nil )
     case value
       when Hash
         @unit = Unit.for(value[:unit])
@@ -87,7 +87,6 @@ class Quantity
   # @param [String] format Format for sprintf, will be given
   # @return [String]
   def to_s
-    return '' if value.nil?
     @unit.s_for(value)
   end
 
