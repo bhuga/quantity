@@ -42,6 +42,16 @@ class Quantity
       to.is_a?(Unit) || @@units.has_key?(to)
     end
 
+    # Plug unit constructor into Numeric, to support things like `1.lb`
+    # @param [Unit, String]
+    def self.add_numeric_helper(unit, name)
+      Numeric.class_eval do
+        define_method name do
+          Quantity.new(self, unit)
+        end
+      end
+    end
+
     # Register a unit with the given symbols
     # @param [Unit] unit
     # @param [*names]
@@ -49,6 +59,7 @@ class Quantity
       unit = Unit.for(unit) unless unit.is_a? Unit
       names.each do |name|
         @@units[name] = unit
+        add_numeric_helper(unit, name)
       end
     end
 

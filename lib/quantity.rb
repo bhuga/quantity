@@ -371,16 +371,3 @@ class Quantity
     end
 
 end
-
-# @private
-# Plug our constructors into Numeric
-class Numeric
-  alias_method :quantity_method_missing, :method_missing
-  def method_missing(method, *args, &block)
-    if Quantity::Unit.is_unit?(method)
-      Quantity.new(self,Quantity::Unit.for(method))
-    else
-      quantity_method_missing(method,*args, &block)
-    end
-  end
-end
