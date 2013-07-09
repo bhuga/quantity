@@ -1,0 +1,4 @@
+language: ruby
+script: "bundle exec spec spec"
+env:
+  - CI=true
