@@ -46,8 +46,10 @@ class Quantity
     # @param [Unit, String]
     def self.add_numeric_helper(unit, name)
       Numeric.class_eval do
-        define_method name do
-          Quantity.new(self, unit)
+        unless method_defined?(name)
+          define_method name do
+            Quantity.new(self, unit)
+          end
         end
       end
     end
