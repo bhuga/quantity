@@ -296,7 +296,7 @@ class Quantity
       unless opts[:name] || !@dimension.is_base?
         raise ArgumentError, "Single-order units must be uniquely named (#{name} - #{dimension})"
       end
-      @name = opts[:name] || string_form
+      @name = (opts[:name] || string_form).to_sym
       self.class.add_alias(self,@name.to_sym)
       raise ArgumentError, "Creating new unit with no value" unless @value
     end

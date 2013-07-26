@@ -55,7 +55,7 @@ describe Quantity do
     it "converts derived units to named units" do
       (1.centimeter * 1.centimeter * 1.centimeter).should == 0.1.centiliter
       (1000.mm * 1.mm * 1.mm).should == 1.ml
-      (1.mm**3).unit.name.should == 'millimeter^3'
+      (1.mm**3).unit.name.should == :'millimeter^3'
       (1.mm**3).measures.name.should == :volume
       (1.centimeter * 1.centimeter).measures.name.should == :area
       (30.meters / 1.second).measures.name.should == :speed
