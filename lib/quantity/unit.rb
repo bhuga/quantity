@@ -331,7 +331,7 @@ class Quantity
     def self.string_form(dimension,units)
       string = dimension.string_form
       units.each do | dimension, unit |
-        string = string.gsub(dimension.name.to_s, unit.name.to_s)
+        string = string.gsub(dimension.string_form, unit.name.to_s)
       end
       string
     end
