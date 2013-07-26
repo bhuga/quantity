@@ -28,7 +28,7 @@ describe Quantity do
 
     it "should have a string representation" do
       2.meters.to_s.should == "2 meter"
-      (2.meters * 2.meters).to_s.should == (defined?(Rational) ? "4 meter^2" : "4.0 meter^2")
+      (2.meters * 2.meters).to_s.should == (defined?(Rational) ? "#{4.to_r.to_s} meter^2" : "4.0 meter^2")
     end
 
   end
