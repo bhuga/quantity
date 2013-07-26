@@ -262,15 +262,15 @@ describe Quantity::Unit do
       end
 
       it "won't convert a simple unit to another dimension" do
-        lambda { @foot.convert(:second) }.should raise_error TypeError
+        lambda { @foot.convert(:second) }.should raise_error ArgumentError
       end
 
       it "won't convert a complex unit to a dimension it doesn't contain" do
-        lambda { @mps.convert(:gram) }.should raise_error TypeError
+        lambda { @mps.convert(:gram) }.should raise_error ArgumentError
       end
 
       it "won't convert to a higher-order unit unless it has an exact matching dimension" do
-        lambda { @liter.convert(:'mm^2') }.should raise_error TypeError
+        lambda { @liter.convert(:'mm^2') }.should raise_error ArgumentError
       end
       
       it "breaks down named complex units" do

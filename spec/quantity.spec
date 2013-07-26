@@ -169,7 +169,7 @@ describe Quantity do
       end
     
       it "does not add items of different types" do
-        lambda { 12.meters + 24.picograms }.should raise_error TypeError
+        lambda { 12.meters + 24.picograms }.should raise_error ArgumentError
       end
    
       it "adds negative quantities" do
@@ -185,7 +185,7 @@ describe Quantity do
       end
 
       it "does not add items of different types" do
-        lambda { (12.meters - 3650.picograms)}.should raise_error TypeError
+        lambda { (12.meters - 3650.picograms)}.should raise_error ArgumentError
       end
       
       it "subtracts numerics from quantities" do
