@@ -190,7 +190,7 @@ describe Quantity::Unit do
       it "supports units of different dimensions" do
         s_f3 = @second * (@foot * @foot * @foot)
         s_f3.name.should == :'foot^3*second'
-        s_f3.value.should == @foot.value**3 / @second.value
+        s_f3.value.should == @foot.value**3 * @second.value
       end
     
       it "supports different units of the same dimension" do
