@@ -222,7 +222,7 @@ describe Quantity::Unit do
       it "supports mixed unit divisors" do
         result = @meter / (@gram * @second)
         result.name.should == :'meter/gram*second'
-        result.value.should == @meter.value / (@gram.value*@second.value)
+        result.value.should == @meter.value.to_r / (@gram.value*@second.value).to_r
       end
 
       it "simplifies results" do
