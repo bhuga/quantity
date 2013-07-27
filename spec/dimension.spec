@@ -23,7 +23,7 @@ describe Quantity::Dimension do
       end
 
       it "creates complex dimensions" do
-        Quantity::Dimension.add_dimension :'length^2', :area
+        Quantity::Dimension.add_dimension :area, :'length^2'
         area = Quantity::Dimension.for(:area)
         area.to_s.should == "area"
         area.name.should == :area
