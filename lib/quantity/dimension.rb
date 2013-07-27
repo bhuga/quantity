@@ -55,7 +55,7 @@ class Quantity
         dim = name
         name.name = aliases.first if aliases.first
       else
-        dim = self.for(name) || self.new({ :name => aliases.first , :description => name})
+        dim = self.for(name) || self.new({ :name => name , :description => name})
         self.add_alias(dim,name)
       end
       unless (dim.class == Dimension) 

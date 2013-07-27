@@ -190,7 +190,7 @@ describe Quantity::Unit do
       it "supports units of different dimensions" do
         s_f3 = @second * (@foot * @foot * @foot)
         s_f3.name.should == :'foot^3*second'
-        s_f3.value.should == @foot.value**3 / @second.value
+        s_f3.value.should == @foot.value**3 * @second.value
       end
     
       it "supports different units of the same dimension" do
@@ -222,7 +222,7 @@ describe Quantity::Unit do
       it "supports mixed unit divisors" do
         result = @meter / (@gram * @second)
         result.name.should == :'meter/gram*second'
-        result.value.should == @meter.value / (@gram.value*@second.value)
+        result.value.should == @meter.value.to_r / (@gram.value*@second.value).to_r
       end
 
       it "simplifies results" do
@@ -262,15 +262,15 @@ describe Quantity::Unit do
       end
 
       it "won't convert a simple unit to another dimension" do
-        lambda { @foot.convert(:second) }.should raise_error TypeError
+        lambda { @foot.convert(:second) }.should raise_error ArgumentError
       end
 
       it "won't convert a complex unit to a dimension it doesn't contain" do
-        lambda { @mps.convert(:gram) }.should raise_error TypeError
+        lambda { @mps.convert(:gram) }.should raise_error ArgumentError
       end
 
       it "won't convert to a higher-order unit unless it has an exact matching dimension" do
-        lambda { @liter.convert(:'mm^2') }.should raise_error TypeError
+        lambda { @liter.convert(:'mm^2') }.should raise_error ArgumentError
       end
       
       it "breaks down named complex units" do

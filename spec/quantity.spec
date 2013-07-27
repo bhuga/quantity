@@ -28,7 +28,7 @@ describe Quantity do
 
     it "should have a string representation" do
       2.meters.to_s.should == "2 meter"
-      (2.meters * 2.meters).to_s.should == (defined?(Rational) ? "4 meter^2" : "4.0 meter^2")
+      (2.meters * 2.meters).to_s.should == (defined?(Rational) ? "#{4.to_r.to_s} meter^2" : "4.0 meter^2")
     end
 
   end
@@ -55,7 +55,7 @@ describe Quantity do
     it "converts derived units to named units" do
       (1.centimeter * 1.centimeter * 1.centimeter).should == 0.1.centiliter
       (1000.mm * 1.mm * 1.mm).should == 1.ml
-      (1.mm**3).unit.name.should == 'millimeter^3'
+      (1.mm**3).unit.name.should == :'millimeter^3'
       (1.mm**3).measures.name.should == :volume
       (1.centimeter * 1.centimeter).measures.name.should == :area
       (30.meters / 1.second).measures.name.should == :speed
@@ -169,7 +169,7 @@ describe Quantity do
       end
     
       it "does not add items of different types" do
-        lambda { 12.meters + 24.picograms }.should raise_error TypeError
+        lambda { 12.meters + 24.picograms }.should raise_error ArgumentError
       end
    
       it "adds negative quantities" do
@@ -185,7 +185,7 @@ describe Quantity do
       end
 
       it "does not add items of different types" do
-        lambda { (12.meters - 3650.picograms)}.should raise_error TypeError
+        lambda { (12.meters - 3650.picograms)}.should raise_error ArgumentError
       end
       
       it "subtracts numerics from quantities" do
