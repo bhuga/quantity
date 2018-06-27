@@ -2,18 +2,18 @@ require 'quantity/dimension/base'
 
 # SI units for Length, Mass, Luminosity, Current, Substance,
 # Temperature, and Time.  Units from yocto- to yotta- are supplied.
-# 
+#
 # Also supplied:
 #  * Ångstroms are supplied for Length. (use angstrom or angstroms)
 #  * Tonnes (Metric) are supplied for mass.
 #  * cc's for volume
 #
-# Volume (liters) is also part of this, since it follows the same pattern, 
+# Volume (liters) is also part of this, since it follows the same pattern,
 # even though the SI considers it a derived unit.
 #
 # The 'reference' unit is milli-.  Units larger than milli-
-# constructed via Fixnums/Bignums, such as 2.meters, will be stored with 
-# Fixnum / Bignum accuracy.  Smaller items, such as 35.femtometers, will 
+# constructed via Integer, such as 2.meters, will be stored with
+# Integer accuracy.  Smaller items, such as 35.femtometers, will
 # be stored with rationals or floats.  Generally speaking, you shouldn't
 # have to worry about this--use the numbers, and it will Do The Right Thing.
 # Do remember that you may need to do a .to_f before dividing if that's

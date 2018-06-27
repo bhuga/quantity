@@ -27,7 +27,7 @@ require 'quantity/systems/us'
 #     speed_of_light = 299_752_458.meters / 1.second    #=>Quantity::Unit::Derived
 #     speed_of_light.measures                           #=> "meters per second"
 #     speed_of_light.units                              #=> "meters per second"
-#   
+#
 #     ludicrous_speed = speed_of_light * 1000
 #     ludicrous_speed.measures                #=> "meters per second"  #TODO: velocity, accleration ?
 #     ludicrous_speed.to_s                    #=> "299752458000 meters per second"
@@ -79,7 +79,7 @@ class Quantity
           @unit = Unit.from_string_form(unit)
         end
         @value = value
-        @reference_value = value * @unit.value 
+        @reference_value = value * @unit.value
     end
   end
 
@@ -117,10 +117,10 @@ class Quantity
   def coerce(other)
     if other.class == @value.class
       [Quantity.new(other, @unit),self]
-    elsif defined?(Rational) && (@value.is_a?(Fixnum)) && (other.is_a?(Fixnum))
-      [Quantity.new(Rational(other), @unit), self] 
+    elsif defined?(Rational) && (@value.is_a?(Integer)) && (other.is_a?(Integer))
+      [Quantity.new(Rational(other), @unit), self]
     elsif defined?(Rational) && (other.is_a?(Rational))
-      [Quantity.new(other, @unit), self] 
+      [Quantity.new(other, @unit), self]
     else
       [Quantity.new(other.to_f, @unit),Quantity.new(@value.to_f, @unit)]
     end
@@ -140,7 +140,7 @@ class Quantity
     end
   end
 
-  # Subtraction.  Subtract a quantity from another of the same type.  They do not need 
+  # Subtraction.  Subtract a quantity from another of the same type.  They do not need
   # to share units.
   # @param [Quantity Numeric] other
   # @return [Quantity]
@@ -196,7 +196,7 @@ class Quantity
       Quantity.new(@value / other, @unit)
     elsif(other.is_a?(Quantity))
       ref = nil
-      if defined?(Rational) && (@value.is_a?(Fixnum)) && (other.is_a?(Fixnum))
+      if defined?(Rational) && (@value.is_a?(Integer)) && (other.is_a?(Integer))
         ref = Rational(@reference_value,other.reference_value)
       elsif defined?(Rational) && (@value.is_a?(Rational)) && (other.is_a?(Rational))
         ref = @reference_value / other.reference_value
@@ -210,11 +210,11 @@ class Quantity
   end
 
   # Exponentiation.  Quantities cannot be raised to negative or fractional powers, only
-  # positive Fixnum.
+  # positive Integer.
   # @param [Numeric]
   # @return [Quantity]
   def **(power)
-    unless power.is_a?(Fixnum) && power > 0
+    unless power.is_a?(Integer) && power > 0
       raise ArgumentError, "Quantities can only be raised to fixed powers (given #{power})"
     end
     if power == 1
@@ -268,7 +268,7 @@ class Quantity
   end
 
   # Integer representation
-  # @return [Fixnum]
+  # @return [Integer]
   def to_i
     @value.to_i
   end
@@ -334,7 +334,7 @@ class Quantity
   #
   # :method to_unit
   # Convert this quantity to another quantity.
-  # unit can be any unit that measures the same thing as this quantity, i.e. 
+  # unit can be any unit that measures the same thing as this quantity, i.e.
   # 12.meters can call .to_feet, .to_centimeters, etc.  An error is raised with
   # other types, i.e. 12.meters.to_grams
   # @raises ArgumentError
@@ -355,7 +355,7 @@ class Quantity
         else
           raise ArgumentError, "Unknown target unit type: #{$2}"
         end
-      else 
+      else
         raise NoMethodError, "Undefined method `#{method}` for #{self}:#{self.class}"
       end
     end
@@ -366,7 +366,7 @@ class Quantity
           return true
         end
       end
-      
+
       super
     end
 

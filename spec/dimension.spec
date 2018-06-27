@@ -129,7 +129,7 @@ describe Quantity::Dimension do
       @force.denominators.first.dimension.should == :time
       @force.denominators.first.power.should == 2
     end
- 
+
     # This is a bad interface and will be removed.
     it "should provide a vaguely parsable string format" do
       component = Quantity::Dimension::DimensionComponent.new(:length,3)
@@ -141,13 +141,13 @@ describe Quantity::Dimension do
       Quantity::Dimension.string_form([component,component2],[component3]).should=='length^3*length^2/time^2'
       Quantity::Dimension.parse_string_form('length^3*length^2/time^2').inspect.should == [[component4],[component3]].inspect
     end
-  
+
     context "multiplication" do
       it "multiplies base dimensions" do
         mass_squared = @mass * @mass
         mass_squared.name.should == :'mass^2'
       end
-     
+
       it "interns base multiplcation results" do
         mass_squared = @mass * @mass
         mass_squared_again = @mass * @mass
@@ -206,7 +206,7 @@ describe Quantity::Dimension do
       end
 
     end
-    
+
     # in division, we test base / complex, but based on equality and
     # multiplication tests, we do not specifically test division against named
     # and derived.  either is fine unless we expect different semantics
@@ -218,18 +218,18 @@ describe Quantity::Dimension do
           speed = @length / @time
           speed.name.should == :'length/time'
         end
-  
+
         it "supports complex divisors" do
           ta = @time / @area
           ta.name.should == :'time/area'
         end
-  
+
         it "supports complex divisors with a negative exponent" do
           mt = @mass / @time
           lmt = @length / mt
           lmt.name.should == :'length*time/mass'
         end
-    
+
         # This one is a tough call.  Supporting this is difficult, since
         # acceleration as a denominator is the same as multiplying by the
         # reciprocal.  It's confusing for the internal representation.  I'm also
@@ -247,7 +247,7 @@ describe Quantity::Dimension do
 
         it "supports a nil numerator component" do
           speed = @mass / @time
-          t_neg_1 = speed / @mass 
+          t_neg_1 = speed / @mass
           t_neg_1.name.should == :'1/time'
           t_neg_1.reduced_hash.should == { :time => -1 }
         end
@@ -260,18 +260,18 @@ describe Quantity::Dimension do
           am.reduced_name.should == :'length^2/mass'
           am.name.should == :'area/mass'
         end
-  
+
         it "supports complex divisors" do
           am = @area / (@mass * @mass)
           am.reduced_name.should == :'length^2/mass^2'
           am.name.should == :'area/mass^2'
         end
-  
+
         it "supports divisors with a negative exponent" do
           result = (@mass * @mass) / (@length / @time)
           result.name.should == :'mass^2*time/length'
         end
-        
+
         it "supports reduced form for divisors with a negative exponent" do
           result = (@mass * @mass) / @accel
           result.name.should == :'mass^2*time^2/length'

@@ -1,6 +1,6 @@
 class Quantity
   # A unit of measurement.
-  # 
+  #
   # Units are a well-defined increment of a measurement domain.  Units
   # measure a particular Dimension, which may be base or compound.
   # Examples of units are meters and degrees celius.
@@ -24,7 +24,7 @@ class Quantity
   #
   class Unit
     include Comparable
-   
+
     # All known units
     @@units = {}
 
@@ -54,7 +54,7 @@ class Quantity
 
     # Add a unit to the system
     # @param [Dimension] dimension
-    # @param [Symbol] name 
+    # @param [Symbol] name
     # @param [Numeric] value
     # @param [[String Symbol]] *aliases
     def self.add_unit(name,dimension,value,*names)
@@ -84,7 +84,7 @@ class Quantity
 
     ### Instance-level methods/vars
     attr_reader :name, :value, :dimension, :aliases
-    
+
     # All the known aliases for this Unit, i.e. name + aliases
     # @return [[Symbol String]]
     def names
@@ -122,9 +122,9 @@ class Quantity
       unless (to.dimension == self.dimension)
         raise ArgumentError, "Cannot convert #{self.dimension} to #{to.dimension}"
       end
-      if defined?(Rational) && (@value.is_a?(Fixnum)) && (to.value.is_a?(Fixnum))
+      if defined?(Rational) && (@value.is_a?(Integer)) && (to.value.is_a?(Integer))
         lambda do | from |
-          from * Rational(@value, to.value) 
+          from * Rational(@value, to.value)
         end
       elsif defined?(Rational) && (@value.is_a?(Rational)) && (to.value.is_a?(Rational))
         lambda do | from |
@@ -144,9 +144,9 @@ class Quantity
     # @param [Numeric] value
     # @return [Numeric]
     def value_for(reference_value)
-      if defined?(Rational) && (reference_value.is_a?(Fixnum)) && (@value.is_a?(Fixnum))
+      if defined?(Rational) && (reference_value.is_a?(Integer)) && (@value.is_a?(Integer))
         Rational(reference_value, @value)
-      elsif defined?(Rational) && (reference_value.is_a?(Rational) || reference_value.is_a?(Fixnum)) && (@value.is_a?(Rational))
+      elsif defined?(Rational) && (reference_value.is_a?(Rational) || reference_value.is_a?(Integer)) && (@value.is_a?(Rational))
         reference_value / @value #Rational(reference_value, @value)
       else
         reference_value / @value.to_f
@@ -179,7 +179,7 @@ class Quantity
     # @param other [Numeric]
     # @return [Unit]
     def **(other)
-      if other.is_a?(Fixnum) && other > 0
+      if other.is_a?(Integer) && other > 0
         other == 1 ? self : self * self**(other-1)
       else
         raise ArgumentError, "#{self} cannot be raised to #{other} power."
@@ -195,7 +195,7 @@ class Quantity
         units.merge!(@units || { @dimension => self })
         dim = @dimension * other.dimension
         existing = Unit.for(Unit.string_form(dim,units).to_sym)
-        existing ||= Unit.new({ :dimension => dim, :units => units }) 
+        existing ||= Unit.new({ :dimension => dim, :units => units })
       else
         raise ArgumentError, "Cannot multiply #{self} with #{other}"
       end
@@ -210,7 +210,7 @@ class Quantity
         units.merge!(@units || { @dimension => self })
         dim = @dimension / other.dimension
         existing = Unit.for(Unit.string_form(dim,units).to_sym)
-        existing ||= Unit.new({ :dimension => dim, :units => units }) 
+        existing ||= Unit.new({ :dimension => dim, :units => units })
         existing
       else
         raise ArgumentError, "Cannot multiply #{self} with #{other}"
@@ -219,7 +219,7 @@ class Quantity
 
     # Convert a portion of this compound to another unit.
     # This one is tricky, because a lot of things can be happening.
-    # It's valid to convert m^2 to ft^2 and to feet (ft^2), but not 
+    # It's valid to convert m^2 to ft^2 and to feet (ft^2), but not
     # really valid to convert to ft^3.
     # @param [Symbol Unit] to
     # @return [Unit]
@@ -230,8 +230,8 @@ class Quantity
       elsif @units && @units[to.dimension]
         units = @units.merge({ to.dimension => to })
         unit = Unit.for(Unit.string_form(@dimension,units).to_sym)
-        unit ||= Unit.new({ :dimension => @dimension, :units => units }) 
-        unit 
+        unit ||= Unit.new({ :dimension => @dimension, :units => units })
+        unit
       else
         raise ArgumentError, "Cannot convert #{self} to #{target}"
       end
@@ -258,7 +258,7 @@ class Quantity
         unit
       end
     end
-    
+
 
     # Higher-order units have a set of units to reference each aspect of the dimension they
     # measure.  This is unused in basic units.
@@ -292,13 +292,13 @@ class Quantity
     def calculate_value
       value = defined?(Rational) ? Rational(1) : 1.0
       @dimension.numerators.each do | component |
-        component.power.times do 
+        component.power.times do
           # we might have a unit for a compound dimension, such as liters for length^3.
           value *= @units[Quantity::Dimension.for(component.dimension)].value
         end
       end
       @dimension.denominators.each do | component |
-        component.power.times do 
+        component.power.times do
           value /= @units[Quantity::Dimension.for(component.dimension)].value
         end
       end
@@ -311,7 +311,7 @@ class Quantity
       self.class.string_form(@dimension,@units)
     end
 
-    # a vaguely human-readable format for a compound unit 
+    # a vaguely human-readable format for a compound unit
     # @param [Dimension] dimension
     # @param [{}] units
     # @return [String]
