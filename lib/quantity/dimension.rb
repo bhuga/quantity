@@ -5,7 +5,7 @@ class Quantity
   # There are 8 base physical dimensions: Length, Mass,
   # Current, Mass, Time, Temperature, Substance, and Luminosity.
   # There are additionally a number of other useful dimensions,
-  # such as Enumerable items (think of 'dozen' as a unit of 
+  # such as Enumerable items (think of 'dozen' as a unit of
   # measurement).
   #
   # From these base dimensions all other measurement dimensions
@@ -34,7 +34,7 @@ class Quantity
           if @@dimensions.has_key?(to)
             @@dimensions[to]
           else
-            # it's possible we have a non-normalized form, such as mass*length 
+            # it's possible we have a non-normalized form, such as mass*length
             # instead of length * mass
             @@dimensions[string_form(parse_string_form(to)).to_sym]
           end
@@ -51,14 +51,14 @@ class Quantity
     # @param [[Symbol String]] *aliases
     def self.add_dimension(name, *aliases)
       dim = nil
-      if name.is_a?(Dimension) 
+      if name.is_a?(Dimension)
         dim = name
         name.name = aliases.first if aliases.first
       else
         dim = self.for(name) || self.new({ :name => aliases.first , :description => name})
         self.add_alias(dim,name)
       end
-      unless (dim.class == Dimension) 
+      unless (dim.class == Dimension)
         dim.name = dim.class.name.downcase.split(/::/).last.to_sym
         self.add_alias(dim,dim.name)
       end
@@ -129,7 +129,7 @@ class Quantity
 
     # Dimensional multiplication
     # @param [Dimension] other
-    # @return [Dimension] 
+    # @return [Dimension]
     def *(other)
       raise ArgumentError, "Cannot multiply #{self} and #{other.class}" unless other.is_a?(Dimension)
       (new_n, new_d) = Dimension.reduce(@numerators + other.numerators, @denominators + other.denominators)
@@ -139,7 +139,7 @@ class Quantity
 
     # Dimensional division
     # @param [Dimension] other
-    # @return [Dimension] 
+    # @return [Dimension]
     def /(other)
       raise ArgumentError, "Cannot divide #{self} by #{other.class}" unless other.is_a?(Dimension)
       (new_n, new_d) = Dimension.reduce(@numerators + other.denominators, @denominators + other.numerators)
@@ -151,10 +151,10 @@ class Quantity
     # @param [Numeric] other
     # @return [Dimension]
     def **(other)
-      raise ArgumentError, "Dimensions can only be raised to whole powers" unless other.is_a?(Fixnum) && other > 0
+      raise ArgumentError, "Dimensions can only be raised to whole powers" unless other.is_a?(Integer) && other > 0
       other == 1 ? self : self * self**(other-1)
     end
- 
+
     # Whether or not this is a compound representation of a base dimension
     # @return [Boolean]
     def is_base?
@@ -194,8 +194,8 @@ class Quantity
     def string_form
       Dimension.string_form(@numerators,@denominators)
     end
-      
-    # A vaguely human-readable, vaguely machine-readable string description of 
+
+    # A vaguely human-readable, vaguely machine-readable string description of
     # a set of numerators and denominators.
     # @private
     # @ param [[DimensionComponent],[DimensionComponent]]
@@ -232,7 +232,7 @@ class Quantity
         end
         components
       end
-      (top, bottom) = serialized.to_s.split(/\//) 
+      (top, bottom) = serialized.to_s.split(/\//)
       Dimension.reduce(parse_thunk.call(top), parse_thunk.call(bottom))
     end
 
@@ -243,7 +243,7 @@ class Quantity
     def self.reduce(numerators,denominators)
       new_numerators = reduce_multiplied_units(numerators)
       new_denominators = reduce_multiplied_units(denominators)
- 
+
       new_numerators.each_with_index do | comp, i |
         new_denominators.each_with_index do | dcomp, j |
           if dcomp.dimension == comp.dimension
